@@ -1,0 +1,358 @@
+{% extends 'base1.html' %}
+
+{% block title %}Créer un projet{% endblock %}
+
+{% block content %}
+<style>
+  .form-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .form-header {
+    color: #1e3c72;
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #2a5298;
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1e3c72;
+    font-size: 0.9rem;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #2a5298;
+    box-shadow: 0 0 0 0.25rem rgba(42, 82, 152, 0.25);
+  }
+
+  .btn-action {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-primary-custom {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+  }
+
+  .btn-success-custom {
+    background: #238a38;
+    color: white;
+  }
+
+  .btn-success-custom:hover {
+    background: #218838;
+  }
+
+  .separator {
+    border-top: 1px solid #e9ecef;
+    margin: 2rem 0;
+  }
+
+  .members-section {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-top: 1.5rem;
+  }
+
+  .members-section h3 {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .members-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .members-list li {
+    background: white;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    border-left: 4px solid #2a5298;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .member-info {
+    flex: 1;
+  }
+
+  .member-name {
+    font-weight: 600;
+    color: #1e3c72;
+    margin-bottom: 0.25rem;
+  }
+
+  .member-id {
+    font-size: 0.85rem;
+    color: #6c757d;
+  }
+
+  .remove-btn {
+    background: #dc3545;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .remove-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
+  }
+
+  .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid #f5c6cb;
+    font-size: 0.9rem;
+  }
+
+  .info-text {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+</style>
+
+<div class="form-container">
+  <h1 class="form-header">Créer un nouveau projet</h1>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}" role="alert">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Section Informations du projet -->
+    <div class="form-section">
+      <h2 class="section-title">Informations du projet</h2>
+
+      <div class="form-group">
+        <label for="{{ form.Nom_projet.id_for_label }}">Nom du projet *</label>
+        {{ form.Nom_projet }}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.Description.id_for_label }}">Description du projet</label>
+        {{ form.Description }}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.Type.id_for_label }}">Type de projet *</label>
+        {{ form.Type }}
+      </div>
+    </div>
+
+    <div class="form-group">
+            <label for="{{ form.image_file.id_for_label }}">Image de couverture (Optionnel)</label>
+            {{ form.image_file }}
+
+            <input type="hidden" name="image_cache" value="{{ image_cache }}">
+
+            <div id="image-preview-msg" class="mt-2 text-success" style="display: none;">
+                <i class="fas fa-check-circle"></i> Image sélectionnée et mémorisée.
+            </div>
+
+            <small class="text-muted">Sera affichée en fond de carte et en en-tête.</small>
+        </div>
+
+    <div class="separator"></div>
+
+    <!-- Section Ajouter des personnes -->
+    <div class="form-section">
+      <h2 class="section-title">Ajouter des participants</h2>
+
+        <div class="form-group">
+            <label for="{{ personne_form.role.id_for_label }}">Ajouter toutes les personne du role :</label>
+            {{ personne_form.role }}
+        </div>
+
+        <div class="form-group">
+            <label>Ou rechercher par prénom nom :</label>
+            <input type="text" name="username" class="form-control" placeholder="Ex: Jean Dupont" value="{{ personne_form.username.value|default:'' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Ou par matricule :</label>
+            <input type="number" name="matricule" class="form-control" placeholder="Ex: 123456" value="{{ personne_form.matricule.value|default:'' }}">
+        </div>
+
+      {% if personne_form.non_field_errors %}
+        <div class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          {% for error in personne_form.non_field_errors %}
+            {{ error }}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <button type="submit" name="ajouter_personne" class="btn btn-primary-custom">
+        Ajouter des participants
+      </button>
+    </div>
+
+    <!-- Liste des participants ajoutés -->
+    {% if personnes_temp %}
+      <div class="members-section">
+        <h3>Participants ajoutés ({{ personnes_temp|length }})</h3>
+        <ul class="members-list">
+          {% for personne in personnes_temp %}
+            <li>
+              <div class="member-info">
+                <div class="member-name">{{ personne.prenom }} {{ personne.nom }}</div>
+                <div class="member-id"> Matricule: {{ personne.id }}</div>
+              </div>
+              <button type="submit" name="remove_personne" value="{{ personne.id }}" class="remove-btn">Retirer</button>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="separator"></div>
+
+    <!-- Bouton de création -->
+    <button type="submit" name="creer_projet" class="btn btn-success-custom">
+      Créer le projet
+    </button>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+
+    // --- PARTIE 1 : GESTION DU HEADER (Couleur / Image) ---
+    var cache = document.querySelector('input[name="image_cache"]').value;
+    var fileInput = document.querySelector('input[type="file"]');
+    var msg = document.getElementById('image-preview-msg');
+    var header = document.getElementById("dynamicHeader");
+
+    if (cache) {
+                msg.style.display = 'block';
+            }
+    fileInput.addEventListener('change', function() {
+        if(this.files.length > 0) {
+            msg.style.display = 'none'; // Le navigateur affiche déjà le nom du nouveau fichier
+                }
+            });
+    // On vérifie s'il y a déjà une image de fond (via le style inline généré par Django)
+    // Note: on vérifie style.backgroundImage car c'est là que le template met l'URL
+    if (!header.style.backgroundImage) {
+      // Calcul du modulo 4 basé sur l'ID du projet pour choisir une couleur
+      var projectId = {{ projet.Id_projet }};
+      var colorIndex = projectId % 4;
+
+      // Ajout de la classe couleur
+      header.classList.add("bg-defaut-" + colorIndex);
+    }
+
+
+    // --- PARTIE 2 : GESTION DU MODAL SUPPRESSION ---
+    var deleteFileModal = document.getElementById('deleteFileModal');
+    if (deleteFileModal) {
+      deleteFileModal.addEventListener('show.bs.modal', function(event) {
+        var button = event.relatedTarget;
+
+        // Récupération des infos
+        var fileId = button.getAttribute('data-file-id');
+        var fileName = button.getAttribute('data-file-name');
+        var fileDate = button.getAttribute('data-file-date');
+
+        // Injection dans le modal
+        var modalFileName = document.getElementById('modalFileName');
+        var modalFileDate = document.getElementById('modalFileDate');
+        var deleteForm = document.getElementById('deleteFileForm');
+
+        modalFileName.textContent = fileName;
+        modalFileDate.textContent = fileDate;
+
+
+        var urlTemplate = "{% url 'projects:delete_file' 0 %}";
+        deleteForm.action = urlTemplate.replace('0', fileId);
+      });
+    }
+  });
+</script>
+
+{% endblock %}

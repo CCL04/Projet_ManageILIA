@@ -1,0 +1,253 @@
+{% extends 'base1.html' %}
+
+{% block title %}Ajouter un Événement{% endblock %}
+
+{% block content %}
+<style>
+  .form-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .form-header {
+    color: #1e3c72;
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #2a5298;
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1e3c72;
+    font-size: 0.9rem;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #2a5298;
+    box-shadow: 0 0 0 0.25rem rgba(42, 82, 152, 0.25);
+  }
+
+  .btn-action {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-primary-custom {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    width: 100%;
+  }
+
+  .btn-success-custom {
+    background: #238a38;
+    color: white;
+  }
+
+  .btn-success-custom:hover {
+    background: #218838;
+  }
+
+  .separator {
+    border-top: 1px solid #e9ecef;
+    margin: 2rem 0;
+  }
+
+  .members-section {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-top: 1.5rem;
+  }
+
+  .members-section h3 {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .members-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .members-list li {
+    background: white;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    border-left: 4px solid #2a5298;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .member-info {
+    flex: 1;
+  }
+
+  .member-name {
+    font-weight: 600;
+    color: #1e3c72;
+    margin-bottom: 0.25rem;
+  }
+
+  .member-id {
+    font-size: 0.85rem;
+    color: #6c757d;
+  }
+
+  .remove-btn {
+    background: #dc3545;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .remove-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
+  }
+
+  .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid #f5c6cb;
+    font-size: 0.9rem;
+  }
+
+  .info-text {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+
+  .row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1.5rem;
+}
+
+.row .form-group {
+  flex: 1;
+  width: auto;
+}
+
+
+</style>
+
+<div class="form-container">
+    <h1 class="form-header">Ajouter un évènement à mon horaire</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-section">
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}" class="form-label">Titre de l'événement</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="alert alert-danger mt-2">{{ form.title.errors }}</div>
+                    {% endif %}
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="{{ form.start_datetime.id_for_label }}" class="form-label">Date et heure de début</label>
+                    {{ form.start_datetime }}
+                    {% if form.start_datetime.errors %}
+                    <div class="alert alert-danger mt-2">{{ form.start_datetime.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.end_datetime.id_for_label }}" class="form-label">Date et heure de fin</label>
+                    {{ form.end_datetime }}
+                    {% if form.end_datetime.errors %}
+                    <div class="alert alert-danger mt-2">{{ form.end_datetime.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Description (optionnelle)</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <div class="alert alert-danger mt-2">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-success-custom">Ajouter</button>
+            <a href="{% url 'personal_schedule' %}" class="btn btn-secondary">Annuler</a>
+
+        </div>
+    </form>
+</div>
+
+{% endblock %}

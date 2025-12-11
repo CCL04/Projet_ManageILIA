@@ -1,0 +1,242 @@
+{% extends 'base1.html' %}
+
+{% block title %}Mes notifications{% endblock %}
+
+{% block content %}
+<style>
+    .notification-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        background: white;
+        overflow: hidden;
+    }
+    
+    .notification-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
+    
+    .notification-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .notification-body {
+        padding: 1.25rem;
+    }
+    
+    .notification-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e3c72;
+        margin: 0;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+    
+    .notification-title:hover {
+        color: #2a5298;
+        text-decoration: none;
+    }
+    
+    .notification-content {
+        color: #666;
+        line-height: 1.6;
+        margin-top: 0.5rem;
+    }
+    
+    .notification-date {
+        color: #999;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .type-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .checkbox-custom {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #1e3c72;
+    }
+    
+    .action-buttons {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .btn-accept {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-accept:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        color: white;
+    }
+    
+    .btn-decline {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-decline:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        color: white;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .delete-selection-btn {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .delete-selection-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(220, 53, 69, 0.3);
+        color: white;
+    }
+    
+    .page-title {
+        color: #1e3c72;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    .btn-primary-custom {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        color: #d0d0d0;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="container mt-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title m-0">
+            <i class="fas fa-bell"></i>
+            Mes notifications
+        </h1>
+
+        <a href="{% url 'notification_create' %}" class="btn btn-primary-custom">
+            <i class="fas fa-plus"></i> Envoyer un message
+        </a>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="notificationForm">
+        {% csrf_token %}
+        
+        <div class="mb-4">
+            <button type="submit" class="delete-selection-btn" id="deleteBtn" style="display: none;">
+                <i class="fas fa-trash"></i> Supprimer la sélection
+            </button>
+        </div>
+
+        {% if notifications_with_events %}
+        {% for item in notifications_with_events %}
+        <div class="notification-card">
+            <div class="notification-header">
+                <div class="d-flex align-items-start">
+                    <input type="checkbox" class="checkbox-custom me-3 mt-1 notif-checkbox"
+                           name="notif_ids" value="{{ item.notif_personne.Id_notif.Id_notif }}">
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'notification_detail' item.notif_personne.Id_notif.Id_notif %}" class="notification-title">
+                                {{ item.notif_personne.Id_notif.Titre }}
+                            </a>
+                            <span class="notification-date">
+                                <i class="far fa-clock"></i>
+                                {{ item.notif_personne.Date_notif|date:"d/m/Y H:i" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="far fa-bell-slash"></i>
+                <h4 class="text-muted">Aucune notification</h4>
+                <p class="text-muted">Vous n'avez aucune notification pour le moment.</p>
+            </div>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+    const checkboxes = document.querySelectorAll('.notif-checkbox');
+    const deleteBtn = document.getElementById('deleteBtn');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            deleteBtn.style.display = anyChecked ? 'inline-block' : 'none';
+        });
+    });
+</script>
+{% endblock %}

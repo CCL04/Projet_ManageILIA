@@ -1,0 +1,67 @@
+<!-- Modal pour libérer le bureau -->
+<div class="modal fade" id="liberationBureauModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Libérer votre bureau</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="liberationBureauForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="date_debut" class="form-label">Date de début</label>
+                        <input type="date" class="form-control" id="date_debut" name="Date_debut" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_fin" class="form-label">Date de fin</label>
+                        <input type="date" class="form-control" id="date_fin" name="Date_fin" required>
+                    </div>
+                    <div id="liberationError" class="alert alert-danger" style="display:none;"></div>
+                    <div id="liberationSuccess" class="alert alert-success" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Libérer le bureau</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('liberationBureauForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch('{% url "reservations:liberer_bureau" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const errorDiv = document.getElementById('liberationError');
+        const successDiv = document.getElementById('liberationSuccess');
+
+        if (data.success) {
+            successDiv.textContent = data.message;
+            successDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('liberationBureauModal'));
+                modal.hide();
+                location.reload();
+            }, 1500);
+        } else {
+            errorDiv.textContent = data.message || 'Une erreur est survenue';
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+        }
+    });
+});
+</script>

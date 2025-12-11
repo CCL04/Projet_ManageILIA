@@ -1,0 +1,377 @@
+{% extends 'base1.html' %}
+
+{% block title %}Détails du projet{% endblock %}
+
+{% block content %}
+{% load binary_img %}
+<style>
+   .bg-defaut-0 { background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%); }
+  .bg-defaut-1 { background: linear-gradient(135deg, #1A2980 0%, #26D0CE 100%); }
+  .bg-defaut-2 { background: linear-gradient(135deg, #134E5E 0%, #71B280 100%); }
+  .bg-defaut-3 { background: linear-gradient(135deg, #614385 0%, #516395 100%); }
+
+  .project-header {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+    color: white;
+
+    /* MODIFICATIONS POUR L'ALIGNEMENT */
+    padding: 3rem 2rem;
+    border-radius: 0 0 12px 12px;
+    text-align: left; /* Remis à gauche */
+    display: flex;    /* Utiliser Flexbox */
+    flex-direction: column;
+    justify-content: center;
+    min-height: 200px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .project-header::before {
+    display: none;
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.9));
+    z-index: 1;
+  }
+
+  .project-header.has-image::before {
+    display: block;
+  }
+
+  .project-header > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .project-header h1 {
+    color: white;
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .project-type-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+
+  .participant-pill {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.9);
+    color: #1e3c72;
+    padding: 0.4rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .project-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+  }
+
+  .section-title {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #2a5298;
+  }
+
+  .btn-action {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    color: white
+  }
+
+  .btn-primary-custom {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+  }
+
+  .btn-success-custom {
+    background: #28a745;
+    color: white;
+  }
+
+  .btn-success-custom:hover {
+    background: #218838;
+  }
+
+  .files-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .files-list li {
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s ease;
+  }
+
+  .files-list li:last-child {
+    border-bottom: none;
+  }
+
+  .files-list li:hover {
+    background: #f8f9fa;
+  }
+
+  .file-info {
+    flex: 1;
+  }
+
+  .file-name {
+    font-weight: 600;
+    color: #1e3c72;
+    margin-bottom: 0.25rem;
+  }
+
+  .file-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+  }
+
+  .file-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .file-download-link {
+    color: #1e3c72;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+  }
+
+  .file-download-link:hover {
+    color: #2a5298;
+  }
+
+  .file-delete-link {
+    color: #dc3545;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+  }
+
+  .file-delete-link:hover {
+    color: #c82333;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6c757d;
+  }
+
+  .empty-state-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.5;
+  }
+
+  .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid #f5c6cb;
+  }
+</style>
+
+<div id="dynamicHeader"
+     class="project-header"
+     style="{% if projet.Image_projet %}background-image: url('{{ projet.Image_projet|bin_to_img }}');{% endif %}">
+
+  <h1>{{ projet.Nom_projet }}</h1>
+  <div class="project-type-badge">{{ projet.get_Type_display }}</div>
+  {% if projet.Description %}
+    <p class="mb-3 opacity-90">{{ projet.Description }}</p>
+  {% endif %}
+
+  {% if error %}
+    <div class="error-message">{{ error }}</div>
+  {% endif %}
+
+  <div class="mt-3">
+    <strong style="display: block; margin-bottom: 0.5rem;">Participants :</strong>
+    <div>
+      {% for membre in membres|slice:":6" %}
+        <span class="participant-pill">{{ membre.Id_Matricule.Prenom }} {{ membre.Id_Matricule.Nom }}</span>
+      {% endfor %}
+      {% if membres|length > 6 %}
+        <span class="participant-pill">+{{ membres|length|add:"-6" }} autres</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if projet.createur and request.user.is_authenticated and request.user.personne == projet.createur %}
+<div class="project-section">
+  <h2 class="section-title">Gestion du projet</h2>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'projects:edit_projet' projet.Id_projet %}" class="btn btn-action btn-primary-custom">
+      Modifier le projet
+    </a>
+    <a href="{% url 'projects:delete_projet' projet.Id_projet %}" class="btn btn-action btn-danger">
+      Supprimer le projet
+    </a>
+  </div>
+</div>
+{% endif %}
+
+{% if request.user.is_authenticated %}
+<div class="project-section">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="section-title mb-0" style="border: none; padding: 0;">Fichiers du projet</h2>
+    {% if is_participant %}
+      <a href="{% url 'projects:upload_file' projet.Id_projet %}" class="btn btn-action btn-success-custom">Ajouter un fichier
+      </a>
+    {% endif %}
+  </div>
+
+  {% if fichiers %}
+    <ul class="files-list">
+      {% for fichier in fichiers %}
+        <li>
+          <div class="file-info">
+            <div class="file-name">{{ fichier.Nom }}</div>
+            <div class="file-meta">
+              Ajouté par {{ fichier.Id_Matricule.Prenom }} {{ fichier.Id_Matricule.Nom }}
+              le {{ fichier.Date_publication|date:"d/m/Y" }}
+              {% if fichier.Description %}
+                <strong> | {{fichier.Description}}</strong><br>
+              {% endif %}
+            </div>
+          </div>
+          <div class="file-actions">
+            {% if fichier.fichier_contenu %}
+              <a href="{% url 'projects:download_file' fichier.Id_fichier %}" class="file-download-link" download>Télécharger</a>
+            {% endif %}
+            {% if request.user.is_authenticated and request.user.personne == fichier.Id_Matricule %}
+              <a href="#" class="file-delete-link" data-bs-toggle="modal" data-bs-target="#deleteFileModal"
+                 data-file-id="{{ fichier.Id_fichier }}"
+                 data-file-name="{{ fichier.Nom }}"
+                 data-file-date="{{ fichier.Date_publication|date:'d/m/Y' }}">
+                Supprimer
+              </a>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">📎</div>
+      <p>Aucun fichier n'a été ajouté à ce projet pour le moment.</p>
+      <!--{% if is_participant %}
+        <a href="{% url 'projects:upload_file' projet.Id_projet %}" class="btn btn-action btn-success-custom mt-2">
+          Ajouter le premier fichier
+        </a>
+      {% endif %}-->
+    </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteFileModal" tabindex="-1" aria-labelledby="deleteFileModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white;">
+        <h5 class="modal-title" id="deleteFileModalLabel">Supprimer le fichier</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+
+        <p><strong>Fichier :</strong> <span id="modalFileName"></span></p>
+        <p><strong>Projet :</strong> {{ projet.Nom_projet }}</p>
+        <p><strong>Ajouté le :</strong> <span id="modalFileDate"></span></p>
+        <p class="mt-3 text-center">Êtes-vous sûr(e) de vouloir supprimer ce fichier ?</p>
+      </div>
+      <div class="modal-footer">
+        <form method="POST" id="deleteFileForm" style="display: inline; margin: 0;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Supprimer</button>
+        </form>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+
+    // --- GESTION HEADER ---
+    var header = document.getElementById("dynamicHeader");
+
+    // Vérifier si une image de fond est définie via le style inline (généré par Django)
+    if (header.style.backgroundImage && header.style.backgroundImage !== 'none' && header.style.backgroundImage !== '') {
+        // C'est une image : on ajoute la classe pour mettre le filtre sombre
+        header.classList.add("has-image");
+    } else {
+        // Pas d'image : on calcule la couleur
+        var projectId = {{ projet.Id_projet }};
+        var colorIndex = projectId % 4;
+        header.classList.add("bg-defaut-" + colorIndex);
+    }
+
+
+    // --- GESTION MODAL SUPPRESSION ---
+    var deleteFileModal = document.getElementById('deleteFileModal');
+    if (deleteFileModal) {
+      deleteFileModal.addEventListener('show.bs.modal', function(event) {
+        var button = event.relatedTarget;
+
+        var fileId = button.getAttribute('data-file-id');
+        var fileName = button.getAttribute('data-file-name');
+        var fileDate = button.getAttribute('data-file-date');
+
+        var modalFileName = document.getElementById('modalFileName');
+        var modalFileDate = document.getElementById('modalFileDate');
+        var deleteForm = document.getElementById('deleteFileForm');
+
+        modalFileName.textContent = fileName;
+        modalFileDate.textContent = fileDate;
+
+        var urlTemplate = "{% url 'projects:delete_file' 0 %}";
+        deleteForm.action = urlTemplate.replace('0', fileId);
+      });
+    }
+  });
+</script>
+{% endblock %}

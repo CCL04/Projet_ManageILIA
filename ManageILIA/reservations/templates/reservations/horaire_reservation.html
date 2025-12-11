@@ -1,0 +1,427 @@
+{% extends 'base1.html' %}
+
+{% block title %}Horaire Bureaux{% endblock %}
+
+{% block content %}
+<div class="container">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<h1 class="h3 mb-0" style="color: #1e3c72; font-weight: 700;">
+			<i class="fas fa-calendar-alt"></i> Horaire des Réservations
+		</h1>
+		<div class="d-flex gap-2">
+			<a href="{% url 'reservations:occupation_locaux' %}" class="btn btn-outline-primary" style="border-radius: 8px; border-color: #2a5298; color: #2a5298; font-weight: 600;">
+				<i class="fas fa-building"></i> Occupation des locaux
+			</a>
+			<button type="button" class="btn btn-primary" id="createReservationBtn" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;">
+				<i class="fas fa-plus"></i> Nouvelle réservation
+			</button>
+		</div>
+	</div>
+</div>
+
+<div class="mb-4">
+	<div id='calendar'></div>
+</div><!-- Modal détail/réservation -->
+<div class="modal fade" id="reservationModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header py-2">
+				<h6 class="modal-title mb-0" id="reservationModalLabel">Détails de la réservation</h6>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body py-2">
+				<div id="reservationDetails" class="small mb-2"></div>
+				<hr class="my-2">
+				<h6 class="mb-2">Créer / Modifier</h6>
+				<form id="reservationForm">
+					{% csrf_token %}
+					<div class="mb-2">
+						<label class="form-label small mb-1">Type</label>
+						<select id="formType" name="type" class="form-select form-select-sm">
+							<option value="1">Bureau</option>
+							<option value="0">Salle</option>
+						</select>
+					</div>
+					<div class="mb-2" id="bureauSelect">
+						<label class="form-label small mb-1">Bureau</label>
+						<select id="formBureau" name="bureau" class="form-select form-select-sm"></select>
+					</div>
+					<div class="mb-2" id="pieceSelect" style="display:none;">
+						<label class="form-label small mb-1">Salle</label>
+						<select id="formPiece" name="piece" class="form-select form-select-sm"></select>
+					</div>
+					<div class="row">
+						<div class="col-md-6 mb-2">
+							<label class="form-label small mb-1">Début</label>
+							<input type="datetime-local" id="formDebut" name="debut" class="form-control form-control-sm" required>
+						</div>
+						<div class="col-md-6 mb-2">
+							<label class="form-label small mb-1">Fin</label>
+							<input type="datetime-local" id="formFin" name="fin" class="form-control form-control-sm" required>
+						</div>
+					</div>
+					<div class="mb-2">
+						<label class="form-label small mb-1">Objet (optionnel)</label>
+						<input type="text" id="formNom" name="nom" class="form-control form-control-sm">
+					</div>
+					<div class="mb-2">
+						<div class="form-check">
+							<input class="form-check-input" type="checkbox" id="formRecurrence" name="recurrence">
+							<label class="form-check-label small" for="formRecurrence">
+								Réservation récurrente
+							</label>
+						</div>
+					</div>
+					<div id="recurrenceOptions" style="display:none;">
+						<div class="mb-2">
+							<label class="form-label small mb-1">Fréquence</label>
+							<select id="formFrequence" name="frequence" class="form-select form-select-sm">
+								<option value="daily">Quotidienne</option>
+								<option value="weekly" selected>Hebdomadaire</option>
+								<option value="biweekly">Bi-hebdomadaire</option>
+								<option value="monthly">Mensuelle</option>
+							</select>
+						</div>
+						<div class="mb-2">
+							<label class="form-label small mb-1">Nombre de répétitions</label>
+							<input type="number" id="formRepetitions" name="repetitions" class="form-control form-control-sm" min="1" max="52" value="4">
+							<small class="text-muted">Maximum 52 répétitions</small>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer py-2">
+				<button type="button" id="deleteBtn" class="btn btn-danger btn-sm me-auto" style="display:none; border-radius: 8px;">Supprimer</button>
+				<button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="border-radius: 8px;">Annuler</button>
+				<button type="button" id="saveBtn" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none; border-radius: 8px; font-weight: 600;">Enregistrer</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+<style>
+#calendar {
+	max-width: 100%;
+	margin: 20px auto;
+	background: white;
+	padding: 20px;
+	border-radius: 12px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	border: 1px solid #e9ecef;
+}
+.fc-toolbar-title {
+	font-size: 1.5rem !important;
+	font-weight: 700;
+	color: #1e3c72;
+}
+.fc .fc-button-primary {
+	background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+	border: none !important;
+	font-weight: 600 !important;
+}
+.fc .fc-button-primary:hover {
+	background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%) !important;
+}
+.fc .fc-button-primary:disabled {
+	opacity: 0.65;
+}
+.fc-event-title {
+	white-space: pre-line !important;
+	line-height: 1.2 !important;
+	font-size: 11px !important;
+	font-weight: 500 !important;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.fc-event {
+	padding: 2px 3px !important;
+}
+.fc-timegrid-event-harness {
+	z-index: 1 !important;
+}
+.fc-timegrid-event {
+	font-size: 11px !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	var calendarEl = document.getElementById('calendar');
+	var calendar = new FullCalendar.Calendar(calendarEl, {
+		initialView: 'timeGridWeek',
+		locale: 'fr',
+		firstDay: 1,
+		headerToolbar: {
+			left: 'prev,next today',
+			center: 'title',
+			right: 'timeGridDay,timeGridWeek,dayGridMonth'
+		},
+		buttonText: {
+			today: "Aujourd'hui",
+			month: 'Mois',
+			week: 'Semaine',
+			day: 'Jour'
+		},
+		selectable: true,
+		selectMirror: true,
+		nowIndicator: true,
+		navLinks: true,
+		slotMinTime: '07:00:00',
+		slotMaxTime: '19:01:00',
+		slotDuration: '00:30:00',
+		expandRows: true,
+		allDaySlot: false,
+		events: function(info, successCallback, failureCallback) {
+			fetch('/reservations/api/events/?start=' + info.startStr + '&end=' + info.endStr)
+				.then(response => response.json())
+				.then(data => {
+					successCallback(data);
+				})
+				.catch(error => {
+					console.error('Erreur lors du chargement des événements:', error);
+					failureCallback(error);
+				});
+		},
+		select: function(info) {
+			// ouvrir modal création avec dates préremplies
+			var modal = new bootstrap.Modal(document.getElementById('reservationModal'));
+			document.getElementById('formDebut').value = info.startStr.slice(0,16);
+			document.getElementById('formFin').value = info.endStr.slice(0,16);
+			document.getElementById('reservationDetails').innerHTML = '<p>Créer une réservation pour la plage sélectionnée.</p>';
+			document.getElementById('deleteBtn').style.display='none';
+			document.getElementById('saveBtn').onclick = function(){ saveReservation(); };
+			document.getElementById('saveBtn').setAttribute('data-current-id','');
+			loadLocations();
+			modal.show();
+		},
+		eventClick: function(info) {
+			// fetch details
+			fetch('/reservations/api/reservations/' + info.event.id + '/').then(r=>r.json()).then(data=>{
+				// Vérifier si l'utilisateur peut éditer
+				if (!data.can_edit) {
+					return; // Silencieux - ne rien faire si pas éditable
+				}
+				
+				var html = `<p><strong>Organisateur:</strong> ${data.organisateur} &lt;${data.email}&gt;</p>`;
+				document.getElementById('reservationDetails').innerHTML = html;
+				// préremplir form
+				document.getElementById('formNom').value = data.nom;
+				document.getElementById('formDebut').value = data.debut.slice(0,16);
+				document.getElementById('formFin').value = data.fin.slice(0,16);
+				if(data.bureau_id){ document.getElementById('formType').value='1'; document.getElementById('bureauSelect').style.display='block'; document.getElementById('pieceSelect').style.display='none'; }
+				else { document.getElementById('formType').value='0'; document.getElementById('bureauSelect').style.display='none'; document.getElementById('pieceSelect').style.display='block'; }
+				loadLocations(data.bureau_id, data.piece_id).then(()=>{
+					// show delete only if can_edit
+					document.getElementById('deleteBtn').style.display = data.can_edit ? 'inline-block' : 'none';
+					document.getElementById('saveBtn').onclick = function(){ saveReservation(info.event.id); };
+					document.getElementById('saveBtn').setAttribute('data-current-id', data.id);
+					var modal = new bootstrap.Modal(document.getElementById('reservationModal'));
+					modal.show();
+				});
+			});
+		},
+		eventDidMount: function(info) {
+			const eventEl = info.el;
+			
+			// Utiliser eventOverlap de FullCalendar ou comparer les positions
+			setTimeout(() => {
+				// Récupérer tous les événements dans la même colonne
+				const allEvents = calendar.getEvents();
+				const currentStart = info.event.start;
+				const currentEnd = info.event.end;
+				
+				// Vérifier s'il y a chevauchement avec d'autres événements
+				let hasOverlap = false;
+				for (let evt of allEvents) {
+					if (evt.id !== info.event.id) {
+						const evtStart = evt.start;
+						const evtEnd = evt.end;
+						// Chevauchement si les périodes se croisent
+						if (currentStart < evtEnd && currentEnd > evtStart) {
+							hasOverlap = true;
+							break;
+						}
+					}
+				}
+				
+				// Ajouter tooltip uniquement si chevauchement détecté
+				if (hasOverlap) {
+					const props = info.event.extendedProps;
+					const start = info.event.start.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+					const end = info.event.end.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+					const tooltipContent = `<small><strong>${props.location}</strong><br>${props.nom_reservation}<br>${props.organisateur}<br>${start} - ${end}</small>`;
+					
+					eventEl.setAttribute('data-bs-toggle', 'tooltip');
+					eventEl.setAttribute('data-bs-html', 'true');
+					eventEl.setAttribute('title', tooltipContent);
+					new bootstrap.Tooltip(eventEl);
+				}
+			}, 200);
+		}
+	});
+
+	calendar.render();
+
+	// Bouton pour créer une nouvelle réservation
+	document.getElementById('createReservationBtn').addEventListener('click', function() {
+		var modal = new bootstrap.Modal(document.getElementById('reservationModal'));
+		document.getElementById('formDebut').value = '';
+		document.getElementById('formFin').value = '';
+		document.getElementById('reservationDetails').innerHTML = '<p>Créer une nouvelle réservation.</p>';
+		document.getElementById('deleteBtn').style.display='none';
+		document.getElementById('saveBtn').onclick = function(){ saveReservation(); };
+		document.getElementById('saveBtn').setAttribute('data-current-id','');
+		loadLocations();
+		modal.show();
+	});
+
+	function loadLocations(selectedBureau, selectedPiece){
+		return fetch('/reservations/api/locations/').then(r=>r.json()).then(data=>{
+			var bSel = document.getElementById('formBureau');
+			var pSel = document.getElementById('formPiece');
+			bSel.innerHTML = '';
+			pSel.innerHTML = '';
+			data.bureaux.forEach(b=>{
+				var o = document.createElement('option'); o.value = b.id; o.text = b.label + ' ('+b.type+')';
+				if(selectedBureau && selectedBureau==b.id) o.selected=true;
+				bSel.appendChild(o);
+			});
+			data.pieces.forEach(p=>{
+				var o = document.createElement('option'); o.value = p.id; o.text = p.label;
+				if(selectedPiece && selectedPiece==p.id) o.selected=true;
+				pSel.appendChild(o);
+			});
+		});
+	}
+
+	document.getElementById('formType').addEventListener('change', function(){
+		if(this.value==='1'){ document.getElementById('bureauSelect').style.display='block'; document.getElementById('pieceSelect').style.display='none'; }
+		else { document.getElementById('bureauSelect').style.display='none'; document.getElementById('pieceSelect').style.display='block'; }
+	});
+
+	// Afficher/masquer les options de récurrence
+	document.getElementById('formRecurrence').addEventListener('change', function(){
+		document.getElementById('recurrenceOptions').style.display = this.checked ? 'block' : 'none';
+	});
+
+	function getCookie(name) {
+		let cookieValue = null;
+		if (document.cookie && document.cookie !== '') {
+				const cookies = document.cookie.split(';');
+				for (let i = 0; i < cookies.length; i++) {
+						const cookie = cookies[i].trim();
+						if (cookie.substring(0, name.length + 1) === (name + '=')) {
+								cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+								break;
+						}
+				}
+		}
+		return cookieValue;
+	}
+
+	document.getElementById('formDebut').addEventListener('input', () => {
+		document.getElementById('formDebut').classList.remove('is-invalid');
+	});
+
+	document.getElementById('formFin').addEventListener('input', () => {
+    	document.getElementById('formFin').classList.remove('is-invalid');
+	});
+
+	function saveReservation(existingId){
+
+		var form = document.getElementById('reservationForm');
+		var fd = new FormData(form);
+		const debut = document.getElementById('formDebut');
+		const fin = document.getElementById('formFin');
+
+		debut.classList.remove('is-invalid');
+		fin.classList.remove('is-invalid');
+
+		let erreur = false;
+
+		if (debut.value === '') {
+			debut.classList.add('is-invalid');
+			erreur = true;
+		}
+		if (fin.value === '') {
+			fin.classList.add('is-invalid');
+			erreur = true;
+		}
+
+		if (debut.value !== '' && fin.value !== '') {
+			const d1 = new Date(debut.value);
+			const d2 = new Date(fin.value);
+
+			if (d2 <= d1) {
+				fin.classList.add('is-invalid');
+				if(fin.nextElementSibling && fin.nextElementSibling.classList.contains('invalid-feedback')){
+					fin.nextElementSibling.textContent = "La date de fin doit être après la date de début.";
+				}
+				erreur = true;
+			}
+		}
+
+		if(erreur) return;
+
+		fd.append('nom', document.getElementById('formNom').value || 'Réservation');
+		fd.append('debut', debut.value);
+		fd.append('fin', fin.value);
+		fd.append('type', document.getElementById('formType').value);
+		
+		var typeValue = document.getElementById('formType').value;
+		if(typeValue === '1') {
+			fd.append('bureau', document.getElementById('formBureau').value);
+		} else {
+			fd.append('piece', document.getElementById('formPiece').value);
+		}
+
+		if(document.getElementById('formRecurrence').checked){
+			fd.append('recurrence', 'true');
+			fd.append('frequence', document.getElementById('formFrequence').value);
+			fd.append('repetitions', document.getElementById('formRepetitions').value);
+		}
+
+		var url = '/reservations/api/reservations/create/';
+		if(existingId) url = '/reservations/api/reservations/' + existingId + '/';
+
+		fetch(url, {
+			method: 'POST',
+			headers: {'X-CSRFToken': getCookie('csrftoken')},
+			body: fd
+		}).then(r => r.json()).then(data => {
+			if(data.error){ 
+				console.error('Erreur:', data.error);
+			}
+			var modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
+			if(modal) modal.hide();
+			calendar.refetchEvents();
+		}).catch(e => { 
+			console.error('Erreur:', e);
+		});
+	}
+
+	document.getElementById('deleteBtn').addEventListener('click', function(){
+		var saveBtn = document.getElementById('saveBtn');
+		var rid = saveBtn.getAttribute('data-current-id');
+		if(!rid) return;
+		var fd = new FormData(); 
+		fd.append('action','delete');
+		fetch('/reservations/api/reservations/'+rid+'/', {
+			method:'POST', 
+			headers:{'X-CSRFToken':getCookie('csrftoken')}, 
+			body:fd
+		}).then(r=>r.json()).then(data=>{ 
+			if(data.error) console.error('Erreur:', data.error);
+			location.reload(); 
+		}).catch(e=>{
+			console.error('Erreur:', e);
+			location.reload();
+		});
+	});
+
+});
+</script>
+{% endblock %}

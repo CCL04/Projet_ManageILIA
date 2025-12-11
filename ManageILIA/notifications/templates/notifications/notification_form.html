@@ -1,0 +1,347 @@
+{% extends 'base1.html' %}
+
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<style>
+  .form-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .form-header {
+    color: #1e3c72;
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #2a5298;
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1e3c72;
+    font-size: 0.9rem;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #2a5298;
+    box-shadow: 0 0 0 0.25rem rgba(42, 82, 152, 0.25);
+  }
+
+  .btn-action {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-primary-custom {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+  }
+
+  .btn-success-custom {
+    background: #238a38;
+    color: white;
+  }
+
+  .btn-success-custom:hover {
+    background: #218838;
+  }
+
+  .separator {
+    border-top: 1px solid #e9ecef;
+    margin: 2rem 0;
+  }
+
+  .members-section {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-top: 1.5rem;
+  }
+
+  .members-section h3 {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .members-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .members-list li {
+    background: white;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    border-left: 4px solid #2a5298;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .member-info {
+    flex: 1;
+  }
+
+  .member-name {
+    font-weight: 600;
+    color: #1e3c72;
+    margin-bottom: 0.25rem;
+  }
+
+  .member-id {
+    font-size: 0.85rem;
+    color: #6c757d;
+  }
+
+  .remove-btn {
+    background: #dc3545;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+
+  .remove-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
+  }
+
+  .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid #f5c6cb;
+    font-size: 0.9rem;
+  }
+
+  .info-text {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+</style>
+
+<div class="form-container">
+    <h1 class="form-header">
+        {% if edit_mode %}
+            <i class="fas fa-edit"></i>Modifier le message
+        {% else %}
+            <i class="fas fa-plus"></i>Envoyer un message
+        {% endif %}
+    </h1>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.Titre.id_for_label }}">
+                {{ form.Titre.label }}
+            </label>
+            <input type="text" class="form-control border-1 rounded-2{% if form.Titre.errors %} is-invalid{% endif %}"
+                id="{{ form.Titre.id_for_label }}"
+                name="{{ form.Titre.name }}"
+                value="{{ form.Titre.value|default:'' }}">
+            {% if form.Titre.errors %}
+                <div class="invalid-feedback d-block">
+                    <i class="fas fa-info-circle"></i> {{ form.Titre.errors.0 }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.Type.id_for_label }}">
+                {{ form.Type.label }} </label>
+            <select class="form-select border-1 rounded-2{% if form.Type.errors %} is-invalid{% endif %}"
+                id="{{ form.Type.id_for_label }}" name="{{ form.Type.name }}">
+                <option value="INFO" {% if form.Type.value == 'INFO' %}selected{% endif %}>         📋 Information</option>
+                <option value="ALERTE" {% if form.Type.value == 'ALERTE' %}selected{% endif %}>     ⚠️ Alerte</option>
+                <option value="RAPPEL" {% if form.Type.value == 'RAPPEL' %}selected{% endif %}>     🔔 Rappel</option>
+                <option value="URGENT" {% if form.Type.value == 'URGENT' %}selected{% endif %}>     🚨 Urgent</option>
+                <option value="GENERAL" {% if form.Type.value == 'GENERAL' %}selected{% endif %}>   📢 Général</option>
+            </select>
+            {% if form.Type.errors %}
+                <div class="invalid-feedback d-block">
+                    <i class="fas fa-info-circle"></i> {{ form.Type.errors.0 }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.Contenu.id_for_label }}">
+                            {{ form.Contenu.label }}
+                        </label>
+                        <textarea class="form-control border-1 rounded-2{% if form.Contenu.errors %} is-invalid{% endif %}"
+                                  id="{{ form.Contenu.id_for_label }}" name="{{ form.Contenu.name }}"
+                                  rows="6" placeholder="Écrivez le contenu de votre notification...">{{ form.Contenu.value|default:'' }}</textarea>
+                        {% if form.Contenu.errors %}
+                        <div class="invalid-feedback d-block">
+                            <i class="fas fa-info-circle"></i> {{ form.Contenu.errors.0 }}
+                        </div>
+                        {% endif %}
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="form-section">
+            <h2 class="section-title">Ajouter des destinataires</h2>
+            <div class="form-group">
+                <label class="form-label">
+                    {{ personne_form.role.label }}
+                </label>
+                {% for checkbox in personne_form.role %}
+                    <div class="col-12 col-sm-6 mb-2">
+                        <div class="form-check d-flex align-items-center">
+                            {{ checkbox.tag }}
+                            <label class="form-check-label ms-2 cursor-pointer" for="{{ checkbox.id_for_label }}">
+                                {{ checkbox.choice_label }}
+                            </label>
+                        </div>
+                    </div>
+                {% endfor %}
+                {% if form.role.errors %}
+                <div class="text-danger small mt-2">
+                    <i class="fas fa-exclamation-circle"></i> {{ form.role.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ personne_form.username.id_for_label }}">Ou rechercher par prénom nom :</label>
+                <input type="text" name="username" class="form-control" placeholder="Ex: Jean Dupont" value="{{ personne_form.username.value|default:'' }}">
+            </div>
+
+            <div class="form-group">
+                 <label for="{{ personne_form.matricule.id_for_label }}">Ou par matricule :</label>
+                <input type="number" name="matricule" class="form-control" placeholder="Ex: 123456" value="{{ personne_form.matricule.value|default:'' }}">
+             </div>
+
+            {% if personne_form.non_field_errors %}
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                {% for error in personne_form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            <button type="submit" name="ajouter_personne" class="btn btn-primary-custom">
+                 Ajouter des destinataires
+            </button>
+        </div>
+
+
+        {% if recipients_temp %}
+        <div class="members-section">
+            <h3>Participants ajoutés ({{ recipients_temp|length }})</h3>
+            <ul class="members-list">
+            {% for personne in recipients_temp %}
+                <li>
+                    <div class="member-info">
+                        <div class="member-name">{{ personne.prenom }} {{ personne.nom }}</div>
+                        <div class="member-id"> Matricule: {{ personne.id }}</div>
+                    </div>
+                    <button type="submit" name="remove_personne" value="{{ personne.id }}" class="remove-btn">
+                        <i class="fas fa-times"></i> Retirer
+                    </button>
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="separator"></div>
+
+        <div class="text-end">
+            <a href="{% url 'mes_notifications' %}" class="btn btn-secondary">Annuler</a>
+            <button type="submit" name="envoyer_message" class="btn btn-success-custom">
+                {% if edit_mode %}
+                <i class="fas fa-save"></i> Enregistrer
+                {% else %}
+                <i class="fas fa-paper-plane"></i> Envoyer le message
+                {% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+
+
+
+
+{% endblock %}

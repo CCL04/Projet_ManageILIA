@@ -1,0 +1,382 @@
+{% extends 'base1.html' %}
+
+{% block title %}Mes Événements{% endblock %}
+
+{% block content %}
+<style>
+  .event-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+  }
+
+  .section-title {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #2a5298;
+  }
+
+  .event-accordion .accordion-item {
+    border: 1px solid #e9ecef;
+    margin-bottom: 0.75rem;
+    border-radius: 8px !important;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .event-accordion .accordion-button {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-weight: 600;
+    border-radius: 8px !important;
+    padding: 0.85rem 1.25rem;
+    font-size: 0.95rem;
+  }
+
+  .event-accordion .accordion-button:not(.collapsed) {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    box-shadow: none;
+  }
+
+  .event-accordion .accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(42, 82, 152, 0.25);
+  }
+
+  .event-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    height: 100%;
+  }
+
+  .event-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(42, 82, 152, 0.2);
+  }
+
+  .event-card .card-body {
+    padding: 1rem;
+  }
+
+  .event-card .card-title {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .event-card .card-subtitle {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .invitation-card {
+    border-left: 4px solid #1e3c72;
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  }
+
+  .invitation-card:hover {
+    border-left-color: #2a5298;
+  }
+
+  .badge {
+    padding: 0.35rem 0.65rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    border-radius: 6px;
+  }
+
+  .participant-list {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .participant-list .list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .participant-list .list-group-item:first-child {
+    border-top: none;
+  }
+
+  .participant-list .list-group-item:last-child {
+    border-bottom: none;
+  }
+
+  .btn-action {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .event-info-item {
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+  }
+
+  .event-info-item:last-child {
+    border-bottom: none;
+  }
+
+  details summary {
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1e3c72;
+  }
+
+  details summary:hover {
+    background: #e9ecef;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6c757d;
+  }
+
+  .empty-state-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.5;
+  }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0" style="color: #1e3c72; font-weight: 700;">
+    <i class="fas fa-calendar-check"></i> Mes Événements
+  </h1>
+  <a href="{% url 'events:create' %}" class="btn btn-primary" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600;">
+    <i class="fas fa-plus"></i> Créer un événement
+  </a>
+</div>
+
+<div class="row g-3">
+  <!-- Section 1: Événements créés -->
+  <div class="col-12">
+    <div class="event-section">
+      <h2 class="section-title"> Mes événements créés</h2>
+      {% if created_events.exists %}
+        <div class="accordion event-accordion" id="createdAccordion">
+          {% for ev in created_events %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingCreated{{ ev.pk }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCreated{{ ev.pk }}" aria-expanded="false" aria-controls="collapseCreated{{ ev.pk }}">
+                  <strong>{{ ev.title }}</strong>
+                  <small class="ms-3 opacity-75">{{ ev.start }} à {{ ev.end }}</small>
+                </button>
+              </h2>
+              <div id="collapseCreated{{ ev.pk }}" class="accordion-collapse collapse" aria-labelledby="headingCreated{{ ev.pk }}" data-bs-parent="#createdAccordion">
+                <div class="accordion-body">
+                  <div class="event-info-item">
+                    <strong>Organisateur:</strong> {% if ev.organiser %}{{ ev.organiser.Prenom }} {{ ev.organiser.Nom }}{% else %}—{% endif %}
+                  </div>
+                  {% if ev.co_organisers.count %}
+                    <div class="event-info-item">
+                      <strong> Co-organisateurs:</strong>
+                      {% for c in ev.co_organisers.all %}
+                        {{ c.Prenom }} {{ c.Nom }}{% if not forloop.last %}, {% endif %}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <div class="event-info-item">
+                    <strong>Description:</strong><br>
+                    <span class="text-muted">{{ ev.description }}</span>
+                  </div>
+
+                  <div class="mt-3 mb-3">
+                    {% if personne and ev.organiser and ev.organiser.Id_Matricule == personne.Id_Matricule %}
+                      <a class="btn btn-sm btn-outline-primary btn-action" href="{% url 'events:edit' ev.pk %}">Modifier</a>
+                      <form action="{% url 'events:delete' ev.pk %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger btn-action">Supprimer</button>
+                      </form>
+                    {% endif %}
+                  </div>
+
+                  <hr>
+
+                  <h6 class="mb-3"><strong>Participants ({{ ev.participants.count }})</strong></h6>
+                  <ul class="list-group participant-list">
+                    {% for p in ev.participants.all %}
+                      <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>{{ p.person.Prenom }} {{ p.person.Nom }}</div>
+                        {% if ev.organiser and p.person and ev.organiser.Id_Matricule == p.person.Id_Matricule %}
+                          <span class="badge bg-primary">Organisateur</span>
+                        {% elif p.status == 1 %}
+                          <span class="badge bg-success">✓ {{ p.get_status_display }}</span>
+                        {% elif p.status == 2 %}
+                          <span class="badge bg-danger">✗ {{ p.get_status_display }}</span>
+                        {% else %}
+                          <span class="badge bg-secondary">{{ p.get_status_display }}</span>
+                        {% endif %}
+                      </li>
+                    {% empty %}
+                      <li class="list-group-item text-muted text-center">Aucun participant</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">🎉</div>
+          <p>Vous n'avez pas encore créé d'événements...</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Section 2: Événements acceptés -->
+  {% if accepted_events.exists %}
+  <div class="col-12">
+    <div class="event-section">
+      <h2 class="section-title"> Événements acceptés</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+          {% for ev in accepted_events %}
+            <div class="col">
+              <div class="card event-card">
+                <div class="card-body">
+                  <h5 class="card-title">{{ ev.title }}</h5>
+                  <h6 class="card-subtitle">{{ ev.start }} — {{ ev.end }}</h6>
+                  <div class="event-info-item">
+                    <strong>Organisateur:</strong><br>
+                    <span class="text-muted">{% if ev.organiser %}{{ ev.organiser.Prenom }} {{ ev.organiser.Nom }}{% else %}—{% endif %}</span>
+                  </div>
+                  {% if ev.co_organisers.count %}
+                    <div class="event-info-item">
+                      <strong>Co-organisateurs:</strong><br>
+                      <span class="text-muted">{% for c in ev.co_organisers.all %}{{ c.Prenom }} {{ c.Nom }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+                    </div>
+                  {% endif %}
+                  <div class="event-info-item">
+                    <strong>Description:</strong><br>
+                    <span class="text-muted">{{ ev.description }}</span>
+                  </div>
+                  <details class="mt-3">
+                    <summary>Participants ({{ ev.participants.count }})</summary>
+                    <ul class="list-group participant-list mt-2">
+                      {% for p in ev.participants.all %}
+                          <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>{{ p.person.Prenom }} {{ p.person.Nom }}</div>
+                            {% if ev.organiser and p.person and ev.organiser.Id_Matricule == p.person.Id_Matricule %}
+                              <span class="badge bg-primary">Organisateur</span>
+                            {% elif p.status == 1 %}
+                              <span class="badge bg-success">✓ {{ p.get_status_display }}</span>
+                            {% elif p.status == 2 %}
+                              <span class="badge bg-danger">✗ {{ p.get_status_display }}</span>
+                            {% else %}
+                              <span class="badge bg-secondary">{{ p.get_status_display }}</span>
+                            {% endif %}
+                          </li>
+                      {% empty %}
+                        <li class="list-group-item text-muted text-center">Aucun participant</li>
+                      {% endfor %}
+                    </ul>
+                  </details>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Section 3: Invitations en attente -->
+  {% if pending_invitations %}
+  <div class="col-12">
+    <div class="event-section">
+      <h2 class="section-title">Invitations en attente</h2>
+        <div class="row row-cols-1 g-3">
+          {% for ev in pending_invitations %}
+            <div class="col">
+              <div class="card event-card invitation-card">
+                <div class="card-body">
+                  <h5 class="card-title">{{ ev.title }}</h5>
+                  <h6 class="card-subtitle">{{ ev.start }} — {{ ev.end }}</h6>
+                  <div class="event-info-item">
+                    <strong>Organisateur:</strong><br>
+                    <span class="text-muted">{% if ev.organiser %}{{ ev.organiser.Prenom }} {{ ev.organiser.Nom }}{% else %}—{% endif %}</span>
+                  </div>
+                  {% if ev.co_organisers.count %}
+                    <div class="event-info-item">
+                      <strong>Co-organisateurs:</strong><br>
+                      <span class="text-muted">{% for c in ev.co_organisers.all %}{{ c.Prenom }} {{ c.Nom }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+                    </div>
+                  {% endif %}
+                  <div class="event-info-item">
+                    <strong>Description:</strong><br>
+                    <span class="text-muted">{{ ev.description }}</span>
+                  </div>
+                  <details class="mt-3">
+                    <summary>Participants ({{ ev.participants.count }})</summary>
+                    <ul class="list-group participant-list mt-2">
+                      {% for p in ev.participants.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                          <div>{{ p.person.Prenom }} {{ p.person.Nom }}</div>
+                          {% if ev.organiser and p.person and ev.organiser.Id_Matricule == p.person.Id_Matricule %}
+                            <span class="badge bg-primary">Organisateur</span>
+                          {% elif p.status == 1 %}
+                            <span class="badge bg-success">✓ {{ p.get_status_display }}</span>
+                          {% elif p.status == 2 %}
+                            <span class="badge bg-danger">✗ {{ p.get_status_display }}</span>
+                          {% else %}
+                            <span class="badge bg-secondary">{{ p.get_status_display }}</span>
+                          {% endif %}
+                        </li>
+                      {% empty %}
+                        <li class="list-group-item text-muted text-center">Aucun participant</li>
+                      {% endfor %}
+                    </ul>
+                  </details>
+                  <div class="mt-4 d-flex gap-2">
+                    <form method="post" action="{% url 'events:respond' ev.pk %}" class="flex-fill">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="accept">
+                      <button type="submit" class="btn btn-success w-100 btn-action">Accepter</button>
+                    </form>
+                    <form method="post" action="{% url 'events:respond' ev.pk %}" class="flex-fill">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="decline">
+                      <button type="submit" class="btn btn-danger w-100 btn-action">Refuser</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

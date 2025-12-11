@@ -1,0 +1,15 @@
+{% extends 'base1.html' %}
+
+{% block title %}Confirmer la suppression{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Supprimer le projet</h1>
+    <p>Êtes-vous sûr(e) de vouloir supprimer le projet <strong>{{ projet.Nom_projet }}</strong> ? Cette action est irréversible.</p>
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+        <a href="{% url 'projects:project_detail' projet.Id_projet %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

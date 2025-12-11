@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Accès interdit - 403{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height:60vh;">
+    <div class="card p-4 shadow" style="max-width:820px; width:100%; border-radius:14px;">
+        <div class="row g-0 align-items-center">
+            <div class="col-md-5 d-flex justify-content-center p-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius:10px;">
+                <div class="text-center text-white">
+                    <h1 style="font-size:4.5rem; margin:0;">403</h1>
+                    <p style="opacity:0.9;">Accès interdit</p>
+                </div>
+            </div>
+            <div class="col-md-7 p-4">
+                <h2>Vous n'avez pas la permission d'accéder à cette page.</h2>
+                <p class="text-muted">Il se peut que vous deviez vous connecter ou que vous n'ayez pas les droits requis.</p>
+                <div class="mt-4">
+                    <a href="{% url 'login' %}" class="btn btn-primary me-2">Se connecter</a>
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary">Retour à l'accueil</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

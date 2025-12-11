@@ -1,0 +1,621 @@
+{% extends 'base1.html' %}
+{% load static %}
+
+{% block title %}Mon Horaire Personnel{% endblock %}
+
+{% block content %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.global.min.js'></script>
+
+<style>
+  .schedule-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .schedule-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+  }
+
+  .btn-action {
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-primary-custom {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+  }
+
+  .btn-primary-custom:hover {
+    background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+    color: white;
+  }
+
+  .btn-success-custom {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+  }
+
+  .btn-success-custom:hover {
+    background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+    color: white;
+  }
+
+  .fc {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  .fc .fc-button-primary {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    border-color: #1e3c72;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+  }
+
+  .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+    border-color: #1e3c72;
+  }
+
+  .fc .fc-button-primary:not(:disabled):hover {
+    background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(30, 60, 114, 0.3);
+  }
+
+  .fc-event {
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .fc-event:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+
+  .fc-daygrid-day:hover {
+    background-color: rgba(30, 60, 114, 0.05);
+  }
+
+  .fc-toolbar-title {
+    color: #1e3c72;
+    font-weight: 600;
+  }
+
+  .fc-col-header-cell {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-weight: 600;
+    color: #1e3c72;
+  }
+
+  .fc-daygrid-day-number {
+    color: #1e3c72;
+    font-weight: 500;
+  }
+
+  .fc-event[data-eventid*="telework"] {
+    pointer-events: none;
+  }
+
+  #calendar {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+</style>
+
+<div class="schedule-header">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h1 class="h2 mb-1">Mon Horaire</h1>
+      <p class="mb-0 opacity-75">Gérez votre emploi du temps et télétravail</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'add_schedule_entry' %}" class="btn btn-light btn-action">
+        <strong>Nouveau</strong>
+      </a>
+      <a href="{% url 'add_recurring_telework' %}" class="btn btn-light btn-action">
+        <strong>Configurer Télétravail</strong>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="schedule-section">
+  <div id="calendar"></div>
+</div>
+<div class="modal fade" id="eventDetailModal" tabindex="-1" aria-labelledby="eventDetailModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content" style="border-radius: 12px;">
+                  <div class="modal-header" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white;">
+                      <h5 class="modal-title" id="eventDetailModalLabel">Détail</h5>
+                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-1 text-muted small" id="eventType"></p>
+            <h4 class="mb-2" id="eventTitle"></h4>
+            <p class="mb-2">
+              <strong>Quand :</strong>
+              <span id="eventDateTime"></span>
+            </p>
+            <p class="mb-0" id="eventDescriptionWrapper" style="display:none;">
+              <strong>Description :</strong><br>
+              <span id="eventDescription"></span>
+            </p>
+          </div>
+          <div class="modal-footer">
+                  <!-- Zone de double confirmation (cachée par défaut) -->
+                  <div id="deleteConfirmSection" class="me-auto" style="display:none; text-align:left;">
+                    <p class="mb-2 fw-bold">Confirmer la suppression :</p>
+                    <!-- Options pour un événement personnel -->
+                    <div id="personalDeleteOptions" style="display:none;">
+                      <button type="button" class="btn btn-danger btn-sm" id="confirmDeletePersonal">
+                        <span id="personalDeleteText">Supprimer cet événement</span>
+                      </button>
+                    </div>
+                    <!-- Options pour un télétravail récurrent -->
+                    <div id="teleworkDeleteOptions" style="display:none;">
+                      <button type="button" class="btn btn-danger btn-sm me-2" id="confirmDeleteTeleworkOccurrence">
+                        Supprimer seulement ce jour
+                      </button>
+                      <button type="button" class="btn btn-outline-danger btn-sm" id="confirmDeleteTeleworkAll">
+                        Supprimer toute la récurrence
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Bouton qui ouvre la zone de confirmation -->
+                  <button type="button" class="btn btn-danger btn-sm" id="deleteEventBtn">
+                    Supprimer
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+              </div>
+        </div>
+      </div>
+    </div>
+
+
+<div class="mt-4">
+    {% if has_shareable_bureau %}
+    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#liberationBureauModal">
+        <i class="fas fa-door-open"></i> Libérer mon bureau
+    </button>
+    {% endif %}
+</div>
+
+
+{% include 'timetable/liberation_bureau.html' %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+            var calendar; // Variable globale pour accéder au calendrier
+
+            var eventModal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
+            var modalTitle = document.getElementById('eventTitle');
+            var modalType = document.getElementById('eventType');
+            var modalDateTime = document.getElementById('eventDateTime');
+            var modalDescWrapper = document.getElementById('eventDescriptionWrapper');
+            var modalDesc = document.getElementById('eventDescription');
+
+            // Boutons / zones de suppression
+            var deleteBtn = document.getElementById('deleteEventBtn');
+            var deleteConfirmSection = document.getElementById('deleteConfirmSection');
+            var personalDeleteOptions = document.getElementById('personalDeleteOptions');
+            var teleworkDeleteOptions = document.getElementById('teleworkDeleteOptions');
+            var confirmDeletePersonalBtn = document.getElementById('confirmDeletePersonal');
+            var confirmDeleteTeleworkOccurrenceBtn = document.getElementById('confirmDeleteTeleworkOccurrence');
+            var confirmDeleteTeleworkAllBtn = document.getElementById('confirmDeleteTeleworkAll');
+
+            var currentEvent = null;
+
+            function getColor(type) {
+                var colors = {
+                    'personal': { bg: '#4e85cd', border: '#0a738a' },
+                    'telework': { bg: '#FF6B6B', border: '#C92A2A' },
+                    'event': { bg: '#20c997', border: '#099268' },
+                    'reservation': { bg: '#ffc107', border: '#e0a800' }
+                };
+                return colors[type] || { bg: '#95E1D3', border: '#4e85cd' };
+            }
+
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                firstDay: 1,
+                businessHours: {
+                    daysOfWeek: [1,2,3,4,5,6,7],
+                    startTime : '07:00',
+                    endTime : '21:00'
+                },
+                buttonText: {
+			        today: "Aujourd'hui",
+		        	month: 'Mois',
+        			week: 'Semaine',
+                    day: 'Jour'
+		        },
+                slotMinTime: '07:00',
+                slotMaxTime: '23:00',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                locale: 'fr',
+
+                events: function(info, successCallback, failureCallback) {
+                    const url = `{% url 'personal_schedule' %}?start=${info.startStr}&end=${info.endStr}&format=json`;
+                    const eventsUrl = `{% url 'get_events_and_reservations' %}?start=${info.startStr}&end=${info.endStr}`;
+
+                    Promise.all([
+                        fetch(url).then(r => r.ok ? r.json() : Promise.reject('Error loading personal schedule')),
+                        fetch(eventsUrl).then(r => r.ok ? r.json() : Promise.reject('Error loading events/reservations'))
+                    ])
+                    .then(([personalData, externalData]) => {
+                        var events = [];
+
+                        // Événements personnels
+                        if (personalData.entries && Array.isArray(personalData.entries)) {
+                            personalData.entries.forEach(function(entry) {
+                                console.log('Ajout entrée personnelle:', entry);
+                                events.push({
+                                    title: entry.title,
+                                    start: entry.start_datetime,
+                                    end: entry.end_datetime,
+                                    backgroundColor: getColor('personal').bg,
+                                    borderColor: getColor('personal').border,
+                                    extendedProps: {
+                                        type: 'personal',
+                                        label: 'Événement personnel',
+                                        description: entry.description,
+                                        entryId: entry.id
+                                    }
+                                });
+                            });
+                        }
+
+                        // Télétravail récurrent
+                        if (personalData.recurring_teleworks && Array.isArray(personalData.recurring_teleworks)) {
+                            personalData.recurring_teleworks.forEach(function(telework) {
+                                console.log('Ajout télétravail:', telework);
+
+                                var startDateObj = new Date(telework.start_date + 'T00:00:00');
+                                var endDateObj = new Date(telework.end_date + 'T00:00:00');
+
+                                for (var d = new Date(startDateObj); d <= endDateObj; d.setDate(d.getDate() + 1)) {
+                                    if (d.getDay() === (telework.day_of_week + 1) % 7) {
+                                        var year = d.getFullYear();
+                                        var month = String(d.getMonth() + 1).padStart(2, '0');
+                                        var day = String(d.getDate()).padStart(2, '0');
+                                        var dateStr = year + '-' + month + '-' + day;
+
+                                        events.push({
+                                            title: 'Télétravail',
+                                            start: dateStr,
+                                            end: dateStr,
+                                            allDay: true,
+                                            backgroundColor: getColor('telework').bg,
+                                            borderColor: getColor('telework').border,
+                                            extendedProps: {
+                                                type: 'telework',
+                                                label: 'Télétravail',
+                                                teleworkId: telework.id,
+                                                date: dateStr
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+
+                        // Événements (acceptés)
+                        if (externalData.events && Array.isArray(externalData.events)) {
+                            externalData.events.forEach(function(event) {
+                                console.log('Ajout événement:', event);
+                                events.push({
+                                    title: event.title,
+                                    start: event.start,
+                                    end: event.end,
+                                    backgroundColor: getColor('event').bg,
+                                    borderColor: getColor('event').border,
+                                    extendedProps: {
+                                        type: 'event',
+                                        label: `Événement (${event.organiser_name})`,
+                                        description: event.description,
+                                        event_id: event.event_id,
+                                        is_organiser: event.is_organiser,
+                                        can_edit: event.can_edit,
+                                        can_delete: event.can_delete,
+                                        organiser_name: event.organiser_name
+                                    }
+                                });
+                            });
+                        }
+
+                        // Réservations
+                        if (externalData.reservations && Array.isArray(externalData.reservations)) {
+                            externalData.reservations.forEach(function(reservation) {
+                                events.push({
+                                    title: reservation.title,
+                                    start: reservation.start,
+                                    end: reservation.end,
+                                    backgroundColor: getColor('reservation').bg,
+                                    borderColor: getColor('reservation').border,
+                                    extendedProps: {
+                                    type: 'reservation',
+                                    label: `Réservation (${reservation.creator_name})`,
+                                    description: reservation.description,
+                                    bureau_name: reservation.bureau_name,
+                                    piece_name: reservation.piece_name
+                                    }
+                                });
+                            });
+                        }
+
+                        console.log('Total événements:', events.length);
+                        successCallback(events);
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors du chargement des événements:', error);
+                        failureCallback(error);
+                    });
+                },
+
+                eventClick: function(info) {
+                    info.jsEvent.preventDefault();
+
+                    var ev = info.event;
+                    currentEvent = ev;
+
+                    // Réinitialiser la zone de confirmation
+                    deleteConfirmSection.style.display = 'none';
+                    personalDeleteOptions.style.display = 'none';
+                    teleworkDeleteOptions.style.display = 'none';
+
+                    // Titre
+                    modalTitle.textContent = ev.title || 'Événement';
+
+                    // Type lisible
+                    modalType.textContent = ev.extendedProps.label || 'Événement';
+
+                    // Date / heures
+                    var startStr = ev.start
+                        ? ev.start.toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: ev.allDay ? undefined : 'short' })
+                        : 'Non défini';
+                    var endStr = ev.end
+                        ? ev.end.toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: ev.allDay ? undefined : 'short' })
+                        : null;
+
+                    modalDateTime.textContent = endStr ? (startStr + ' ➜ ' + endStr) : startStr;
+
+                    // Description
+                    var desc = ev.extendedProps.description;
+                    if (desc && desc.trim() !== '') {
+                        modalDescWrapper.style.display = 'block';
+                        modalDesc.textContent = desc;
+                    } else {
+                        modalDescWrapper.style.display = 'none';
+                        modalDesc.textContent = '';
+                    }
+
+                    // Afficher le bouton "Supprimer" seulement pour les types gérés
+                    if (ev.extendedProps.type === 'personal' || ev.extendedProps.type === 'telework' || 
+                        (ev.extendedProps.type === 'event' && ev.extendedProps.can_delete) ||
+                        (ev.extendedProps.type === 'reservation' && ev.extendedProps.can_delete)) {
+                        deleteBtn.style.display = 'inline-block';
+                    } else {
+                        deleteBtn.style.display = 'none';
+                    }
+
+                    eventModal.show();
+                },
+
+                height: 'auto',
+                contentHeight: 'auto'
+            });
+
+            deleteBtn.addEventListener('click', function() {
+                if (!currentEvent) return;
+
+                deleteConfirmSection.style.display = 'block';
+                personalDeleteOptions.style.display = 'none';
+                teleworkDeleteOptions.style.display = 'none';
+
+                // Adapter le texte du bouton selon le type
+                var deleteText = document.getElementById('personalDeleteText');
+                if (currentEvent.extendedProps.type === 'personal') {
+                    deleteText.textContent = 'Supprimer cet événement personnel';
+                    personalDeleteOptions.style.display = 'block';
+                } else if (currentEvent.extendedProps.type === 'event') {
+                    deleteText.textContent = 'Supprimer cet événement';
+                    personalDeleteOptions.style.display = 'block';
+                } else if (currentEvent.extendedProps.type === 'reservation') {
+                    deleteText.textContent = 'Supprimer cette réservation';
+                    personalDeleteOptions.style.display = 'block';
+                } else if (currentEvent.extendedProps.type === 'telework') {
+                    teleworkDeleteOptions.style.display = 'block';
+                }
+            });
+
+            // Confirmer suppression d'un événement personnel
+            confirmDeletePersonalBtn.addEventListener('click', function() {
+                if (!currentEvent) return;
+
+                // Gestion pour événement personnel standard
+                if (currentEvent.extendedProps.type === 'personal') {
+                    fetch("{% url 'delete_personal_entry' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                        body: JSON.stringify({ id: currentEvent.extendedProps.entryId })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Erreur serveur');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'ok') {
+                            eventModal.hide();
+                            calendar.refetchEvents();
+                        } else {
+                            alert("Impossible de supprimer : " + (data.error || 'Erreur inconnue'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert("Erreur lors de la suppression de l'événement");
+                    });
+                }
+                // Gestion pour événement (events app)
+                else if (currentEvent.extendedProps.type === 'event') {
+                    fetch("{% url 'delete_event' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                        body: JSON.stringify({ event_id: currentEvent.extendedProps.event_id })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Erreur serveur');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'ok') {
+                            eventModal.hide();
+                            calendar.refetchEvents();
+                        } else {
+                            alert("Impossible de supprimer : " + (data.error || 'Erreur inconnue'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert("Erreur lors de la suppression de l'événement");
+                    });
+                }
+                // Gestion pour réservation
+                else if (currentEvent.extendedProps.type === 'reservation') {
+                    fetch("{% url 'delete_reservation' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                        body: JSON.stringify({ reservation_id: currentEvent.extendedProps.reservation_id })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Erreur serveur');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'ok') {
+                            eventModal.hide();
+                            calendar.refetchEvents();
+                        } else {
+                            alert("Impossible de supprimer : " + (data.error || 'Erreur inconnue'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert("Erreur lors de la suppression de la réservation");
+                    });
+                }
+            });
+
+            // Confirmer suppression d'une seule occurrence de télétravail
+            confirmDeleteTeleworkOccurrenceBtn.addEventListener('click', function() {
+                if (!currentEvent) return;
+
+                fetch("{% url 'delete_recurring_telework_occurrence' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({
+                        id: currentEvent.extendedProps.teleworkId,
+                        date: currentEvent.extendedProps.date
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Erreur serveur');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'ok') {
+                        eventModal.hide();
+                        calendar.refetchEvents();
+                    } else {
+                        alert("Impossible de supprimer : " + (data.error || 'Erreur inconnue'));
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Erreur lors de la suppression de l'occurrence");
+                });
+            });
+
+            // Confirmer suppression de toute la récurrence de télétravail
+            confirmDeleteTeleworkAllBtn.addEventListener('click', function() {
+                if (!currentEvent) return;
+
+                fetch("{% url 'delete_recurring_telework' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({
+                        id: currentEvent.extendedProps.teleworkId
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Erreur serveur');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'ok') {
+                        eventModal.hide();
+                        calendar.refetchEvents();
+                    } else {
+                        alert("Impossible de supprimer : " + (data.error || 'Erreur inconnue'));
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Erreur lors de la suppression de la récurrence");
+                });
+            });
+
+            calendar.render();
+
+            // Fonction globale pour rafraîchir le calendrier après l'ajout
+            window.refreshCalendar = function() {
+                calendar.refetchEvents();
+            };
+        });
+    </script>
+
+{% endblock %}

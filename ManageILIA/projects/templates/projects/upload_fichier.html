@@ -1,0 +1,204 @@
+{% extends 'base1.html' %}
+
+{% block title %}Ajouter un fichier{% endblock %}
+
+{% block content %}
+<style>
+  .form-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .form-header {
+    color: #1e3c72;
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #2a5298;
+  }
+
+  .project-info {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border-left: 4px solid #2a5298;
+  }
+
+  .project-info p {
+    margin: 0;
+    color: #495057;
+    font-weight: 500;
+  }
+
+  .project-info strong {
+    color: #1e3c72;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1e3c72;
+    font-size: 0.9rem;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="file"],
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #2a5298;
+    box-shadow: 0 0 0 0.25rem rgba(42, 82, 152, 0.25);
+  }
+
+  .form-group input[type="file"] {
+    padding: 0.5rem;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .btn-action {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-success-custom {
+    background: #28a745;
+    color: white;
+  }
+
+  .btn-success-custom:hover {
+    background: #218838;
+    color: white;
+  }
+
+  .btn-secondary-custom {
+    background: #6c757d;
+    color: white;
+  }
+
+  .btn-secondary-custom:hover {
+    background: #5a6268;
+    color: white;
+    text-decoration: none;
+  }
+
+  .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid #f5c6cb;
+    font-size: 0.9rem;
+  }
+
+  .info-text {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+</style>
+
+<div class="form-container">
+  <h1 class="form-header">Ajouter un fichier</h1>
+
+  <div class="project-info">
+    <p><strong>Projet :</strong> {{ projet.Nom_projet }}</p>
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="error-message">
+      {% for error in form.non_field_errors %}
+        {{ error }}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label for="{{ form.Nom.id_for_label }}">Nom du fichier *</label>
+      {{ form.Nom }}
+      {% if form.Nom.errors %}
+        <div class="error-message">
+          {{ form.Nom.errors }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.Description.id_for_label }}">Description (optionnel)</label>
+      {{ form.Description }}
+      {% if form.Description.errors %}
+        <div class="error-message">
+          {{ form.Description.errors }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label for="{{ form.fichier.id_for_label }}">Fichier *</label>
+      {{ form.fichier }}
+      {% if form.fichier.errors %}
+        <div class="error-message">
+          {{ form.fichier.errors }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="button-group">
+      <button type="submit" class="btn-action btn-success-custom">
+        Ajouter le fichier
+      </button>
+      <a href="{% url 'projects:project_detail' projet.Id_projet %}" class="btn-action btn-secondary-custom">
+        Annuler
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

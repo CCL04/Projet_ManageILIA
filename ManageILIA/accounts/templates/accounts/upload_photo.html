@@ -1,0 +1,65 @@
+{% extends 'base1.html' %}
+
+{% block title %}Changer ma photo{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm mt-5">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                <h4 class="mb-0">Modifier ma photo de profil</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4 text-center">
+                        {% load binary_img %}
+                        {% if user.personne.Photo %}
+                             <img src="{{ user.personne.Photo|bin_to_img }}" alt="Avatar"
+                                  style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f0f0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+
+                            <p class="text-muted mt-3">Photo actuelle</p>
+                        {% else %}
+                            <div style="width: 200px; height: 200px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; margin: 0 auto; color: #1e3c72; font-weight: bold; font-size: 5rem;">
+                                {{ user.username|slice:":1"|upper }}
+                            </div>
+                            <p class="text-muted mt-3">Aucune photo définie</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.photo_file.id_for_label }}" class="form-label">Choisir une nouvelle image</label>
+                        {{ form.photo_file }}
+                        {% if form.photo_file.errors %}
+                        <div class="text-danger">
+                            {{ form.photo_file.errors }}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Formats acceptés : JPG, PNG.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div>
+                            {% if user.personne.Photo %}
+                                <button type="submit" name="delete_photo" value="true" class="btn btn-danger btn-sm"
+                                        formnovalidate
+                                        onclick="return confirm('Voulez-vous vraiment supprimer votre photo ?');">
+                                    <i class="fas fa-trash-alt"></i> Supprimer la photo
+                                </button>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'accounts:profil' %}" class="btn btn-outline-secondary">Annuler</a>
+                            <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">
+                                Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

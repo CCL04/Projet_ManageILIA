@@ -1,0 +1,126 @@
+{% extends 'base1.html' %}
+
+{% block title %}{{ notification.Titre }}{% endblock %}
+
+{% block content %}
+<style>
+    .rounded-2 { border-radius: 8px; }
+    .fw-500 { font-weight: 500; }
+    .fw-600 { font-weight: 600; }
+    .lh-lg { line-height: 1.75; }
+    .border-bottom-light { border-bottom: 1px solid #e9ecef !important; }
+    .list-group-item { background-color: transparent; border: none; }
+    .badge { font-weight: 500; font-size: 0.75rem; padding: 0.35rem 0.65rem; }
+    h1 { letter-spacing: -0.5px; }
+</style>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12 col-md-10 col-lg-8 mx-auto">
+            <div class="mb-4">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                    <div>
+                        <span class="badge bg-primary text-white mb-2">{{ notification.Type }}</span>
+                        <h1 class="h3 fw-600 text-dark" style="margin: 0;">{{ notification.Titre }}</h1>
+                    </div>
+                </div>
+                <p class="text-muted small mb-0">
+                    <i class="far fa-calendar"></i> {{ notification.Date|date:"d M Y" }} à {{ notification.Date|date:"H:i" }}
+                </p>
+            </div>
+
+            <div class="bg-white rounded-2 p-4 shadow-sm mb-4" style="border-left: 4px solid #1e3c72;">
+                <div class="notification-content text-secondary lh-lg">
+                    {{ notification.Contenu|linebreaks }}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="fw-600 text-dark mb-3">
+                    <i class="fas fa-users"></i> Destinataires <span class="badge bg-light text-dark">{{ destinataires.count }}</span>
+                </h5>
+                <div class="list-group list-group-flush">
+                    {% for dest in destinataires %}
+                    <div class="list-group-item px-0 py-3 border-bottom-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="mb-1 fw-500 text-dark">{{ dest.Id_Matricule.Prenom }} {{ dest.Id_Matricule.Nom }}</p>
+                                <small class="text-muted">{{ dest.Id_Matricule.Email }}</small>
+                            </div>
+                            <small class="text-muted text-nowrap ms-2">
+                                {{ dest.Date_notif|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-info border-0 rounded-2 mb-0" style="background-color: #e7f3ff;">
+                        <i class="fas fa-info-circle"></i> Aucun destinataire pour cette notification.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                {% if event and participant and participant.status == 0 %}
+                <form method="post" action="{% url 'respond_event_invitation' notification.Id_notif %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="accept">
+                    <button type="submit" class="btn btn-success btn-sm rounded-2">
+                        <i class="fas fa-check"></i> Accepter
+                    </button>
+                </form>
+                <form method="post" action="{% url 'respond_event_invitation' notification.Id_notif %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="decline">
+                    <button type="submit" class="btn btn-outline-warning btn-sm rounded-2">
+                        <i class="fas fa-times"></i> Refuser
+                    </button>
+                </form>
+                {% endif %}
+
+                <button type="button" class="btn btn-outline-danger btn-sm rounded-2 ms-auto" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="fas fa-trash-alt"></i> Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Retirer de ma liste
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-500">Voulez-vous vraiment retirer cette notification ?</p>
+
+                <div class="alert alert-light border mb-3">
+                    <small>
+                        <strong>Titre :</strong> {{ notification.Titre }}<br>
+                        <strong>Date :</strong> {{ notification.Date|date:"d/m/Y H:i" }}
+                    </small>
+                </div>
+
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-info-circle"></i> Cette action retirera la notification uniquement de votre vue. Elle restera visible pour les autres destinataires.
+                </p>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+
+                <form method="post" action="{% url 'notification_delete' notification.Id_notif %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-trash-alt"></i> Supprimer pour moi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

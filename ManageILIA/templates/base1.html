@@ -1,0 +1,396 @@
+{% load static %}
+{% load binary_img %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Service ILIA{% endblock %}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    >
+    <style>
+        body {
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            padding-bottom: 2rem;
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            color: white !important;
+            font-weight: 700;
+            font-size: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-brand img {
+            filter: brightness(0) invert(1);
+        }
+
+        /* --- ELEMENTS DU MENU (Hamburger & Sidebar) --- */
+        .menu-icon {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 6px 0;
+            transition: all 0.3s ease;
+        }
+
+        .menu-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .menu-icon span {
+            display: block;
+            width: 100%;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-menu {
+            min-width: 240px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            border: none;
+            margin-top: 0.5rem;
+        }
+
+        .sidebar-menu .dropdown-item {
+            padding: 0.75rem 1.25rem;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 0.25rem 0.5rem;
+            font-weight: 500;
+        }
+
+        .sidebar-menu .dropdown-item:hover, .sidebar-menu .dropdown-item.active {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .sidebar-menu .dropdown-item.active {
+            font-weight: 600;
+        }
+
+        /* --- PROFIL UTILISATEUR --- */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .user-name {
+            color: white;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .profile-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: white;
+            color: #1e3c72;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-circle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        .profile-circle-img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            /* Pas de bordure comme demandé */
+        }
+
+        .profile-dropdown {
+            min-width: 220px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            border: none;
+            margin-top: 0.5rem;
+        }
+
+        .profile-dropdown .dropdown-item {
+            padding: 0.75rem 1.25rem;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 0.25rem 0.5rem;
+        }
+
+        .profile-dropdown .dropdown-item:hover {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .dropdown-divider {
+            margin: 0.5rem 0;
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+        }
+
+        /* --- FOOTER --- */
+        .footer {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding-top: 3rem;
+            padding-bottom: 1.5rem;
+            margin-top: auto; /* Sécurité supplémentaire */
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .footer h5 {
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer h5::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 2px;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .footer ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: white;
+            padding-left: 5px;
+        }
+
+        .copyright {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid px-4">
+        <div class="d-flex align-items-center">
+            <div class="dropdown">
+                <div class="menu-icon" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <ul class="dropdown-menu sidebar-menu">
+                    <li>
+                        <a class="dropdown-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+                           href="{% url 'home' %}">
+                            Home
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item {% if request.resolver_match.url_name == 'horaire' %}active{% endif %}"
+                           href="{% url 'personal_schedule' %}" class="nav-link">
+                            Horaire
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item {% if request.resolver_match.url_name == 'bureaux' %}active{% endif %}"
+                           href="{% url 'reservations:occupation_locaux' %}" class="nav-link">
+                            Reservations
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="dropdown-item {% if request.resolver_match.url_name == 'projets' %}active{% endif %}"
+                           href="{% url 'projects:mes_projets' %}">
+                            Projets
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item {% if request.resolver_match.app_name == 'events' %}active{% endif %}"
+                           href="{% url 'events:dashboard' %}">
+                            Événements
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <a class="navbar-brand d-flex align-items-center ms-3" href="{% url 'home' %}">
+                <img src="{% static 'logo.png' %}" alt="Logo" width="90" height="45" class="me-2">
+            </a>
+        </div>
+
+        <div class="flex-grow-1"></div>
+
+        {% if user.is_authenticated %}
+        <div class="dropdown">
+            <div class="user-info" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                {% if user.personne.Photo %}
+                    <img src="{{ user.personne.Photo|bin_to_img }}" alt="Avatar" class="profile-circle-img">
+                {% else %}
+                    <div class="profile-circle">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                {% endif %}
+            </div>
+            <ul class="dropdown-menu dropdown-menu-end profile-dropdown">
+                <li>
+                    <a class="dropdown-item" href="{% url 'accounts:profil' %}">
+                        👤 Mon profil
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'mes_notifications' %}">
+                        🔔 Notifications
+                        {% if unread_notifications_count > 0 %}
+                        <span class="badge bg-danger rounded-pill ms-2">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form method="post" action="{% url 'logout' %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="dropdown-item text-danger">
+                            🚪 Se déconnecter
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="container main-content">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <h5>Service ILIA</h5>
+                <p class="text-white-50">
+                    Plateforme de gestion centralisée des réservations, projet et évènement du service ILIA.
+                </p>
+            </div>
+
+
+            <div class="col-lg-2 col-md-6 mb-4">
+                <h5>Navigation</h5>
+                <ul>
+                    <li><a href="{% url 'home' %}">Accueil</a></li>
+                    <li><a href="{% url 'personal_schedule' %}">Horaire</a></li>
+                    <li><a href="{% url 'reservations:occupation_locaux' %}">Réservations</a></li>
+                    <li><a href="{% url 'projects:mes_projets' %}">Projets</a></li>
+                    <li><a href="{% url 'events:dashboard' %}">Événements</a></li>
+                </ul>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5>Mon Compte</h5>
+                <ul>
+                    <li><a href="{% url 'accounts:profil' %}">Mon profil</a></li>
+                    <li><a href="{% url 'mes_notifications' %}">Notifications</a></li>
+                </ul>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5>Contact</h5>
+                <ul class="text-white-50">
+                    <li>📍 Mons, Belgique</li>
+                    <li>📧 Sidi.MAHMOUDI@umons.ac.be</li>
+                    <li>📞 +32 65 37 40 51</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 text-center copyright">
+                <p>&copy; {% now "Y" %} Projet : Modélisation des données</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

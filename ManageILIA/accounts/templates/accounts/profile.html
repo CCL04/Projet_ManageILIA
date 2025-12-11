@@ -1,0 +1,247 @@
+{% extends 'base1.html' %}
+
+{% block title %}Mon Profil{% endblock %}
+
+{% block content %}
+<style>
+  .profile-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .profile-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #2a5298;
+  }
+
+  .info-row {
+    display: flex;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+  }
+
+  .info-label {
+    color: #1e3c72;
+    font-weight: 600;
+    min-width: 150px;
+    flex-shrink: 0;
+  }
+
+  .info-value {
+    color: #495057;
+  }
+
+  .role-badge {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 500;
+    display: inline-block;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .btn-password {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-password:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(42, 82, 152, 0.4);
+    color: white;
+  }
+
+  .btn-logout {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-logout:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+  }
+
+  .profile-avatar {
+    width:110px;
+    height: 110px;
+    border-radius: 50%;
+    background: white;
+    color: #1e3c72;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 2rem;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .profile-avatar-img {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover; /* Important pour ne pas déformer l'image */
+    background-color: white;
+  }
+
+
+</style>
+
+    <div class="profile-header">
+      <div class="d-flex align-items-center gap-3">
+
+        {% load binary_img %}
+        {% if profile_user.personne.Photo %}
+            <img src="{{ profile_user.personne.Photo|bin_to_img }}" alt="Avatar" class="profile-avatar-img">
+        {% else %}
+            <div class="profile-avatar">
+                {{ profile_user.username|slice:":1"|upper }}
+            </div>
+        {% endif %}
+
+        <div class="flex-grow-1">
+          <h1 class="h2 mb-1">{% if is_own_profile %}Mon Profil{% else %}Profil de {{ personne.Nom }} {{personne.Prenom}}{% endif %}</h1>
+          <p class="mb-0 opacity-75">{{ profile_user.username }}</p>
+        </div>
+
+      </div>
+    </div>
+
+
+{% if personne %}
+  <div class="profile-card">
+    <h2 class="section-title">Informations Personnelles</h2>
+
+    <div class="info-row">
+      <div class="info-label">Nom :</div>
+      <div class="info-value">{{ personne.Nom }}</div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-label">Prénom :</div>
+      <div class="info-value">{{ personne.Prenom }}</div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-label">Matricule :</div>
+      <div class="info-value">{{ personne.Id_Matricule }}</div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-label">Email :</div>
+      <div class="info-value">{{ personne.Email }}</div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-label">Service :</div>
+      <div class="info-value">{{ personne.Service|default:"Non renseigné" }}</div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-label">Département :</div>
+      <div class="info-value">{{ personne.Departement|default:"Non renseigné" }}</div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-label">Université :</div>
+      <div class="info-value">{{ personne.Universite|default:"Non renseigné" }}</div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-label">Rôles :</div>
+      <div class="info-value">
+        {% if roles %}
+          {% for role in roles %}
+            <span class="role-badge">{{ role.Nom_role }}</span>
+          {% endfor %}
+        {% else %}
+          <span class="text-muted">Aucun rôle assigné</span>
+        {% endif %}
+      </div>
+    </div>
+
+      {% if personne.Date_fin %}
+          {% if is_own_profile or is_admin %}
+          <div class="info-row">
+            <div class="info-label">Date de fin de contrat : </div>
+            <div class="info-value">
+              {% load tz %}
+              {% now "Y-m-d" as today %}
+              {% if personne.Date_fin|date:"Y-m-d" < today %}
+                <span style="color: #dc3545; font-weight: 600;">
+                  {{ personne.Date_fin|date:"d/m/Y" }} (⚠️ Contrat expiré)
+                </span>
+              {% else %}
+                {{ personne.Date_fin|date:"d/m/Y" }}
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+        {% endif %}
+
+  </div>
+
+
+    {% if is_own_profile %}
+  <div class="d-flex gap-3 flex-wrap mb-4">
+    <a href="{% url 'accounts:password_change' %}" class="btn btn-warning">
+      Changer le mot de passe
+    </a>
+    {% if user.is_staff or user.is_superuser %}
+      <a href="/admin/" class="btn btn-primary" target="_blank">
+        <i class="fas fa-cog"></i> Page Admin
+      </a>
+    {% endif %}
+    <a href="{% url 'accounts:upload_photo' %}" class="btn btn-secondary">Modifier la photo de profil</a>
+    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">
+        Se déconnecter
+      </button>
+    </form>
+  </div>
+    {% endif %}
+{% else %}
+  <div class="profile-card">
+    <div class="alert alert-danger mb-0" style="border-radius: 8px;">
+      <strong>Erreur :</strong> Impossible de charger vos informations personnelles.
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

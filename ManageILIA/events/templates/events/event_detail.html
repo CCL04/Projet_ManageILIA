@@ -1,0 +1,102 @@
+{% extends 'base1.html' %}
+
+{% block content %}
+<style>
+  .event-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .event-detail-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+  }
+
+  .event-info-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .event-info-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .event-info-item:last-child {
+    border-bottom: none;
+  }
+
+  .event-info-label {
+    color: #1e3c72;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .btn-back {
+    background: white;
+    color: #1e3c72;
+    border: 2px solid white;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-back:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-2px);
+  }
+</style>
+
+<div class="event-header">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h1 class="h2 mb-2">{{ event.title }}</h1>
+      <p class="mb-0 opacity-75">
+        <strong>{{ event.start }} — {{ event.end }}</strong>
+      </p>
+    </div>
+    <a href="{% url 'events:dashboard' %}" class="btn btn-back">
+      ← Retour
+    </a>
+  </div>
+</div>
+
+<div class="event-detail-card">
+  <div class="event-info-section">
+    <div class="event-info-item">
+      <div class="event-info-label">Organisateur</div>
+      <div>{% if event.organiser %}{{ event.organiser.Prenom }} {{ event.organiser.Nom }}{% else %}—{% endif %}</div>
+    </div>
+
+    {% if event.co_organisers.count %}
+      <div class="event-info-item">
+        <div class="event-info-label">Co-organisateurs</div>
+        <div>
+          {% for c in event.co_organisers.all %}
+            {{ c.Prenom }} {{ c.Nom }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+
+  </div>
+
+  <div class="mt-4">
+    <h5 class="event-info-label mb-3">Description</h5>
+    <p class="text-muted" style="line-height: 1.6;">{{ event.description }}</p>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends 'base1.html' %}
+
+{% block title %}Mes projets{% endblock %}
+
+{% block content %}
+{% load binary_img %}<style>
+
+   .bg-defaut-0 { background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%); }
+  .bg-defaut-1 { background: linear-gradient(135deg, #1A2980 0%, #26D0CE 100%); }
+  .bg-defaut-2 { background: linear-gradient(135deg, #134E5E 0%, #71B280 100%); }
+  .bg-defaut-3 { background: linear-gradient(135deg, #614385 0%, #516395 100%); }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    color: #1e3c72;
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin: 0;
+  }
+
+  .create-btn {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .create-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(42, 82, 152, 0.4);
+    color: white;
+    text-decoration: none;
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .project-card {
+    /* Propriétés de base */
+    background-color: white;
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+    position: relative;
+    border: none;
+    overflow: hidden;
+  }
+
+  .project-card::before {
+    display: none;
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8));
+    z-index: 1;
+  }
+
+  .project-card.has-image::before {
+    display: block;
+}
+
+  .project-card > * {
+    position: relative;
+    z-index: 2;
+    color: white !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(42, 82, 152, 0.2);
+    text-decoration: none;
+  }
+
+  .project-card h3 {
+    margin: 0 0 0.75rem 0;
+    color: #1e3c72;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .project-type {
+    display: inline-block;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    width: fit-content;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  .project-type.enseignement {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  }
+
+  .project-type.recherche {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+  }
+
+  .project-type.service {
+    background: linear-gradient(135deg, #fd7e14 0%, #e56b0e 100%);
+  }
+
+  .project-participants {
+    font-size: 0.85rem;
+    color: #6c757d;
+    padding-top: 0.75rem;
+    margin-top: auto;
+    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.9);
+  }
+
+  .empty-state {
+    background: white;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+  }
+
+  .empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-state h2 {
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state p {
+    color: #adb5bd;
+    margin-bottom: 1.5rem;
+  }
+
+  .empty-state a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .empty-state a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(42, 82, 152, 0.4);
+    color: white;
+  }
+</style>
+
+<div class="page-header">
+  <h1>Mes projets</h1>
+  <a href="{% url 'projects:create_project' %}" class="create-btn">
+    Créer un projet
+  </a>
+</div>
+
+{% if projets %}
+  <div class="projects-grid">
+    {% for projet in projets %}
+
+        <a href="{% url 'projects:project_detail' projet.Id_projet %}"
+            class="project-card {% if projet.Image_projet %}has-image{% else %}{{ projet.couleur_defaut }}{% endif %}"
+            style="{% if projet.Image_projet %}background-image: url('{{ projet.Image_projet|bin_to_img }}');{% endif %}">
+
+             <h3>{{ projet.Nom_projet }}</h3>
+
+            <span class="project-type {% if projet.Type == 0 %}enseignement{% elif projet.Type == 1 %}recherche{% else %}service{% endif %}">
+                {{ projet.get_Type_display }}
+            </span>
+
+            <div class="project-participants">
+                Cliquez pour voir les détails
+            </div>
+        </a>
+{% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📁</div>
+    <h2>Aucun projet pour le moment</h2>
+    <p>Créez votre premier projet ou faites-vous inviter à un projet existant.</p>
+    <!--<a href="{% url 'projects:create_project' %}">Créer un projet</a>-->
+  </div>
+{% endif %}
+{% endblock %}

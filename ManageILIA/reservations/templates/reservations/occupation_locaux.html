@@ -1,0 +1,940 @@
+{% extends 'base1.html' %}
+{% load l10n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0" style="color: #1e3c72; font-weight: 700;">
+            <i class="fas fa-building"></i> {{ title }}
+        </h1>
+        <a href="{% url 'reservations:horaire_reservation' %}" class="btn btn-primary" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600;">
+            <i class="fas fa-calendar"></i> Calendrier
+        </a>
+    </div>
+
+    <!-- Sélecteur de date -->
+    <div class="toolbar-container mb-4">
+    <div class="card-body p-3">
+        <form method="get" id="toolbarForm" class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+            <div class="date-widget d-flex align-items-center">
+                <button type="button" class="btn btn-link btn-nav" onclick="changeDate(-1)" title="Jour précédent">
+                    &lt;
+                </button>
+
+                <div class="date-display position-relative mx-1">
+                    <i class="far fa-calendar-alt date-icon"></i>
+                    <input type="date" id="dateSelect" name="date"
+                        class="form-control date-input"
+                        value="{{ selected_date|date:'Y-m-d' }}"
+                        onchange="this.form.submit()">
+                </div>
+
+                <button type="button" class="btn btn-link btn-nav" onclick="changeDate(1)" title="Jour suivant">
+                    &gt;
+                </button>
+
+                <button type="button" class="btn btn-sm btn-today ms-2" id="todayBtn" title="Revenir à aujourd'hui">
+                    Aujourd'hui
+                </button>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 filters-group">
+
+                <div class="input-group input-group-sm custom-input-group me-2">
+                    <span class="input-group-text"><i class="fas fa-sort-amount-down"></i></span>
+                    <select name="tri" class="form-select" onchange="this.form.submit()">
+                        <option value="type" {% if sort_option == 'type' %}selected{% endif %}>Par Type</option>
+                        <option value="etage" {% if sort_option == 'etage' %}selected{% endif %}>Par Étage</option>
+                        <option value="nom" {% if sort_option == 'nom' %}selected{% endif %}>Alphabétique</option>
+                    </select>
+                </div>
+
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="q" class="form-control form-control-sm search-input"
+                           placeholder="Rechercher..." value="{{ search_query }}"
+                           onkeydown="if(event.key === 'Enter') this.form.submit()">
+                    {% if search_query %}
+                        <a href="{% url 'reservations:occupation_locaux' %}?date={{ selected_date|date:'Y-m-d' }}&tri={{ sort_option }}"
+                           class="search-clear"><i class="fas fa-times"></i></a>
+                    {% endif %}
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Conteneur principal : fond blanc, ombre douce, arrondi */
+.toolbar-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Ombre très douce */
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+/* --- Widget Date --- */
+.date-widget {
+    background: #f8f9fa; /* Fond gris très clair */
+    padding: 4px;
+    border-radius: 50px; /* Forme de pilule */
+    border: 1px solid #e9ecef;
+}
+
+.btn-nav {
+    background-color: white;    /* Fond blanc pour ressortir sur le gris */
+    color: #1e3c72;             /* Bleu du thème pour l'icône */
+    border: 1px solid #dce0e4;  /* Bordure subtile */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08); /* Ombre pour donner du relief */
+
+    border-radius: 50%;
+    width: 38px;                /* Un peu plus grand (était 32px) */
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    margin: 0 2px;
+
+    font-size: 1.4rem;     /* Taille du symbole */
+    font-weight: 400;      /* Pas trop gras pour garder l'élégance */
+    line-height: 1;        /* Évite le décalage vertical */
+    padding-bottom: 3px;}
+
+.btn-nav:hover {
+    background-color: #1e3c72;  /* Devient bleu plein au survol */
+    color: white;               /* Icône devient blanche */
+    border-color: #1e3c72;
+    transform: translateY(-2px); /* Petit mouvement vers le haut */
+    box-shadow: 0 4px 8px rgba(30, 60, 114, 0.25); /* Ombre plus marquée */
+}
+
+.btn-nav:active {
+    transform: translateY(0);   /* Effet de clic */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.date-display {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.date-icon {
+    position: absolute;
+    left: 10px;
+    color: #1e3c72;
+    pointer-events: none; /* Pour cliquer au travers */
+    z-index: 2;
+}
+
+.date-input {
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    color: #1e3c72;
+    padding-left: 32px; /* Place pour l'icone */
+    cursor: pointer;
+    font-size: 0.95rem;
+    box-shadow: none !important; /* Enlever le halo bleu du focus */
+}
+.date-input:focus {
+    background: white;
+    border-radius: 8px;
+}
+
+.btn-today {
+    background-color: #eef2f7;
+    color: #1e3c72;
+    font-weight: 600;
+    border: none;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+.btn-today:hover {
+    background-color: #1e3c72;
+    color: white;
+}
+
+/* --- Inputs (Tri) --- */
+.custom-input-group {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    overflow: hidden;
+}
+.custom-input-group .input-group-text {
+    background: white;
+    border: none;
+    color: #1e3c72;
+    padding-right: 0;
+}
+.custom-input-group .form-select {
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: none !important;
+    cursor: pointer;
+}
+
+/* --- Recherche --- */
+.search-wrapper {
+    position: relative;
+    width: 220px;
+}
+.search-input {
+    border-radius: 20px;
+    padding-left: 35px; /* Place pour la loupe */
+    padding-right: 30px; /* Place pour la croix */
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    transition: all 0.2s;
+    height: 34px;
+}
+.search-input:focus {
+    background-color: white;
+    border-color: #1e3c72;
+    box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+}
+.search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #adb5bd;
+    font-size: 0.9rem;
+}
+.search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #dc3545;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+.search-clear:hover {
+    color: #a71d2a;
+}
+</style>
+
+<script>
+function changeDate(days) {
+    var dateInput = document.getElementById('dateSelect');
+    if (!dateInput.value) return;
+
+    var currentDate = new Date(dateInput.value);
+    currentDate.setDate(currentDate.getDate() + days);
+
+    var year = currentDate.getFullYear();
+    var month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    var day = String(currentDate.getDate()).padStart(2, '0');
+
+    dateInput.value = `${year}-${month}-${day}`;
+    document.getElementById('toolbarForm').submit();
+}
+
+document.getElementById('todayBtn').addEventListener('click', function() {
+    var today = new Date();
+    var year = today.getFullYear();
+    var month = String(today.getMonth() + 1).padStart(2, '0');
+    var day = String(today.getDate()).padStart(2, '0');
+
+    document.getElementById('dateSelect').value = `${year}-${month}-${day}`;
+    document.getElementById('toolbarForm').submit();
+});
+</script>
+
+    <!-- Timeline horizontale -->
+    <div class="card" style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border: 1px solid #e9ecef;">
+        <div class="card-body">
+            <h5 class="card-title mb-3" style="color: #1e3c72; font-weight: 600;">Occupation le {{ selected_date|date:"d/m/Y" }}</h5>
+            
+            <!-- En-tête des heures -->
+            <div class="timeline-header mb-2">
+                <div class="row g-0">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-10">
+                        <div class="hours-header">
+                            <div class="hour-cell">7h</div>
+                            <div class="hour-cell">8h</div>
+                            <div class="hour-cell">9h</div>
+                            <div class="hour-cell">10h</div>
+                            <div class="hour-cell">11h</div>
+                            <div class="hour-cell">12h</div>
+                            <div class="hour-cell">13h</div>
+                            <div class="hour-cell">14h</div>
+                            <div class="hour-cell">15h</div>
+                            <div class="hour-cell">16h</div>
+                            <div class="hour-cell">17h</div>
+                            <div class="hour-cell">18h</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lignes de locaux (bureaux et salles) -->
+            {% for item in locaux_data %}
+            <div class="bureau-row mb-2 p-2 border rounded">
+                <div class="row align-items-center g-0">
+                    <div class="col-md-2 pe-2">
+                        {% if item.type == 'bureau' %}
+                            <a href="{% url 'reservations:bureau_occupation' item.id %}" 
+                               class="text-decoration-none">
+                                <div class="local-info">
+                                    <strong class="d-block">{{ item.nom }}</strong>
+                                    <small class="text-muted d-block">{{ item.piece.Nom }} - E{{ item.piece.Etage }}</small>
+                                    <span class="badge badge-sm {% if item.local.Type == 2 %}bg-danger{% elif item.local.Type == 0 %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ item.local.get_Type_display }}
+                                    </span>
+                                </div>
+                            </a>
+                        {% else %}
+                            <a href="{% url 'reservations:piece_occupation' item.id %}" 
+                               class="text-decoration-none">
+                                <div class="local-info">
+                                    <strong class="d-block"><i class="fas fa-users"></i> {{ item.nom }}</strong>
+                                    <small class="text-muted d-block">E{{ item.piece.Etage }}</small>
+                                    <span class="badge badge-sm bg-info">Salle</span>
+                                </div>
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-10">
+                        <div class="timeline-container" 
+                             data-local-type="{{ item.type }}"
+                             data-local-id="{{ item.id }}"
+                             data-local-nom="{{ item.nom }}">
+                            {% for creneau in item.creneaux %}
+                            {% if creneau.is_blocked %}
+                                    <div class="reservation-block blocked-slot"
+                                         data-left="{{ creneau.left|unlocalize }}"
+                                         data-width="{{ creneau.width|unlocalize }}"
+                                         data-color="{{ creneau.color }}"
+                                         data-bs-toggle="tooltip"
+                                         title="Non réservable - Assigné à {{ creneau.owner_name }} (Présentiel)"
+                                         style="cursor: not-allowed; opacity: 0.8; font-style: italic;">
+                                        <small><i class="fas fa-user-lock"></i> {{ creneau.owner_name }}</small>
+                                    </div>
+                                {% else %}
+                                    <div class="reservation-block"
+                                         data-left="{{ creneau.left|unlocalize }}"
+                                         data-width="{{ creneau.width|unlocalize }}"
+                                         data-color="{{ creneau.color }}"
+                                         data-reservation-id="{{ creneau.reservation.Id_reservation }}"
+                                         data-bs-toggle="tooltip"
+                                         title="{{ creneau.reservation.Nom }} - {{ creneau.reservation.Id_Matricule }} ({{ creneau.debut_str }}-{{ creneau.fin_str }})"
+                                         style="cursor: pointer;">
+                                        <small><strong>{{ creneau.debut_str }}</strong> {{ creneau.reservation.Id_Matricule }}</small>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Aucun bureau trouvé.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline-header {
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+}
+.hours-header {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    text-align: center;
+    font-size: 10px;
+    color: #6c757d;
+    font-weight: 600;
+}
+.hour-cell {
+    border-left: 1px solid #dee2e6;
+    padding: 1px 0;
+}
+.hour-cell:first-child {
+    border-left: none;
+}
+.local-info {
+    font-size: 12px;
+    line-height: 1.3;
+}
+.local-info strong {
+    font-size: 13px;
+}
+.local-info small {
+    font-size: 10px;
+}
+.badge-sm {
+    font-size: 9px;
+    padding: 2px 5px;
+}
+.bureau-row {
+    background: white;
+    transition: background-color 0.2s;
+    padding: 8px !important;
+    margin-bottom: 8px !important;
+}
+.bureau-row:hover {
+    background: #f8f9fa;
+}
+.timeline-container {
+    position: relative;
+    height: 32px;
+    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    cursor: crosshair;
+    transition: background-color 0.2s;
+}
+
+.timeline-container:hover {
+    background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%);
+}
+
+.selection-overlay {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(13, 110, 253, 0.3);
+    border: 2px solid #0d6efd;
+    border-radius: 3px;
+    pointer-events: none;
+    z-index: 5;
+}
+.reservation-block {
+    position: absolute;
+    height: 100%;
+    border-radius: 3px;
+    padding: 2px 4px;
+    color: white;
+    font-size: 10px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.reservation-block:hover {
+    opacity: 0.9;
+    cursor: pointer;
+    z-index: 10;
+}
+</style>
+
+<script>
+// Initialiser les tooltips Bootstrap
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Appliquer les styles de positionnement depuis les attributs data
+    document.querySelectorAll('.reservation-block').forEach(function(block) {
+        var left = block.getAttribute('data-left');
+        var width = block.getAttribute('data-width');
+        var color = block.getAttribute('data-color');
+        if (left !== null && left !== '') {
+            block.style.left = left + '%';
+        }
+        if (width !== null && width !== '') {
+            block.style.width = width + '%';
+        }
+        if (color !== null) {
+            block.style.background = color;
+            block.style.borderColor = color;
+        }
+        
+        // Ajouter un événement de clic pour éditer la réservation
+        block.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var reservationId = this.getAttribute('data-reservation-id');
+            if (reservationId) {
+                openEditReservationModal(reservationId);
+            }
+        });
+    });
+    
+    // Bouton Aujourd'hui
+    var todayBtn = document.getElementById('todayBtn');
+    if (todayBtn) {
+        todayBtn.addEventListener('click', function() {
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateSelect').value = today;
+            this.closest('form').submit();
+        });
+    }
+});
+</script>
+
+<!-- Modal de création/modification de réservation -->
+<div class="modal fade" id="reservationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h5 class="modal-title">Réservation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reservationDetails" class="mb-2"></div>
+                <form id="reservationForm">
+                    <input type="hidden" id="formType">
+                    <input type="hidden" id="formBureau">
+                    <input type="hidden" id="formPiece">
+                    <div class="mb-2">
+                        <label for="formNom" class="form-label small mb-1">Objet de la réservation <span class="text-muted">(optionnel)</span></label>
+                        <input type="text" class="form-control form-control-sm" id="formNom" placeholder="Ex: Réunion d'équipe, Travail individuel...">
+                    </div>
+                    <div class="mb-2">
+                        <label for="formDebut" class="form-label small mb-1">Début</label>
+                        <input type="datetime-local" class="form-control form-control-sm" id="formDebut" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="formFin" class="form-label small mb-1">Fin</label>
+                        <input type="datetime-local" class="form-control form-control-sm" id="formFin" required>
+                    </div>
+                    <div class="mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="formRecurrence">
+                            <label class="form-check-label small" for="formRecurrence">
+                                Réservation récurrente
+                            </label>
+                        </div>
+                    </div>
+                    <div id="recurrenceOptions" style="display:none;">
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">Fréquence</label>
+                            <select id="formFrequence" class="form-select form-select-sm">
+                                <option value="daily">Quotidienne</option>
+                                <option value="weekly" selected>Hebdomadaire</option>
+                                <option value="biweekly">Bi-hebdomadaire</option>
+                                <option value="monthly">Mensuelle</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1">Nombre de répétitions</label>
+                            <input type="number" id="formRepetitions" class="form-control form-control-sm" min="1" max="52" value="4">
+                            <small class="text-muted">Maximum 52 répétitions</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="border-radius: 8px;">Annuler</button>
+                <button type="button" class="btn btn-danger btn-sm" id="deleteBtn" style="display:none; border-radius: 8px;" onclick="deleteReservation()">Supprimer</button>
+                <button type="button" class="btn btn-primary btn-sm" id="saveBtn" onclick="saveReservation()" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none; border-radius: 8px; font-weight: 600;">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentOverlay = null;
+let isSelecting = false;
+let startX = 0;
+let currentContainer = null;
+
+// Initialiser les événements de sélection sur toutes les timelines
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.timeline-container').forEach(container => {
+        container.addEventListener('mousedown', startSelection);
+    });
+    
+    document.addEventListener('mousemove', updateSelection);
+    document.addEventListener('mouseup', endSelection);
+});
+
+function startSelection(event) {
+    // Ne pas démarrer si on clique sur une réservation existante
+    if (event.target.classList.contains('reservation-block') || event.target.closest('.reservation-block')) {
+        return;
+    }
+    
+    isSelecting = true;
+    currentContainer = event.currentTarget;
+    const rect = currentContainer.getBoundingClientRect();
+    startX = event.clientX - rect.left;
+    
+    // Créer l'overlay initial
+    if (currentOverlay) {
+        currentOverlay.remove();
+    }
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'selection-overlay';
+    overlay.style.left = '0%';
+    overlay.style.width = '0%';
+    currentContainer.appendChild(overlay);
+    currentOverlay = overlay;
+    
+    event.preventDefault();
+}
+
+function updateSelection(event) {
+    if (!isSelecting || !currentContainer || !currentOverlay) return;
+    
+    const rect = currentContainer.getBoundingClientRect();
+    const currentX = event.clientX - rect.left;
+    
+    // Calculer left et width
+    const left = Math.min(startX, currentX);
+    const width = Math.abs(currentX - startX);
+    
+    const leftPercent = (left / rect.width) * 100;
+    const widthPercent = (width / rect.width) * 100;
+    
+    currentOverlay.style.left = leftPercent + '%';
+    currentOverlay.style.width = widthPercent + '%';
+}
+
+function endSelection(event) {
+    if (!isSelecting || !currentContainer) return;
+    
+    const rect = currentContainer.getBoundingClientRect();
+    const endX = event.clientX - rect.left;
+    
+    // Calculer le début et la fin en fonction des positions
+    const left = Math.min(startX, endX);
+    const right = Math.max(startX, endX);
+    
+    const leftPercent = (left / rect.width) * 100;
+    const widthPercent = ((right - left) / rect.width) * 100;
+    
+    // Si la sélection est trop petite (moins de 2%), considérer comme un clic simple (1h)
+    if (widthPercent < 2) {
+        createReservationFromClick(leftPercent);
+    } else {
+        createReservationFromSelection(leftPercent, leftPercent + widthPercent);
+    }
+    
+    isSelecting = false;
+    startX = 0;
+    
+    // Garder l'overlay visible un moment
+    setTimeout(() => {
+        if (currentOverlay && currentOverlay.parentElement) {
+            currentOverlay.remove();
+        }
+        currentOverlay = null;
+        currentContainer = null;
+    }, 500);
+}
+
+function createReservationFromClick(clickPercent) {
+    // Convertir en minutes depuis 7h
+    const minutesSinceSeven = (clickPercent / 100) * 660;
+    
+    let startHour = 7 + Math.floor(minutesSinceSeven / 60);
+    let startMinutes = minutesSinceSeven % 60;
+    
+    // Arrondir aux 30 minutes
+    if (startMinutes < 15) {
+        startMinutes = 0;
+    } else if (startMinutes < 45) {
+        startMinutes = 30;
+    } else {
+        startMinutes = 0;
+        startHour += 1;
+    }
+    
+    // Durée par défaut: 1 heure
+    let endHour = startHour + 1;
+    let endMinutes = startMinutes;
+    
+    if (endHour > 18) {
+        endHour = 18;
+        endMinutes = 0;
+    }
+    
+    openReservationModal(startHour, startMinutes, endHour, endMinutes);
+}
+
+function createReservationFromSelection(startPercent, endPercent) {
+    // Convertir les pourcentages en heures
+    const startMinutesSinceSeven = (startPercent / 100) * 660;
+    const endMinutesSinceSeven = (endPercent / 100) * 660;
+    
+    let startHour = 7 + Math.floor(startMinutesSinceSeven / 60);
+    let startMinutes = startMinutesSinceSeven % 60;
+    
+    let endHour = 7 + Math.floor(endMinutesSinceSeven / 60);
+    let endMinutes = endMinutesSinceSeven % 60;
+    
+    // Arrondir aux 30 minutes
+    if (startMinutes < 15) {
+        startMinutes = 0;
+    } else if (startMinutes < 45) {
+        startMinutes = 30;
+    } else {
+        startMinutes = 0;
+        startHour += 1;
+    }
+    
+    if (endMinutes < 15) {
+        endMinutes = 0;
+    } else if (endMinutes < 45) {
+        endMinutes = 30;
+    } else {
+        endMinutes = 0;
+        endHour += 1;
+    }
+    
+    // Limiter à 18h
+    if (endHour > 18 || (endHour === 18 && endMinutes > 0)) {
+        endHour = 18;
+        endMinutes = 0;
+    }
+    
+    // Assurer une durée minimale de 30 minutes
+    const startTotalMinutes = startHour * 60 + startMinutes;
+    const endTotalMinutes = endHour * 60 + endMinutes;
+    
+    if (endTotalMinutes - startTotalMinutes < 30) {
+        endHour = startHour;
+        endMinutes = startMinutes + 30;
+        if (endMinutes >= 60) {
+            endHour += 1;
+            endMinutes = 0;
+        }
+    }
+    
+    openReservationModal(startHour, startMinutes, endHour, endMinutes);
+}
+
+function openReservationModal(startHour, startMinutes, endHour, endMinutes) {
+    const selectedDate = document.getElementById('dateSelect').value;
+    const localType = currentContainer.getAttribute('data-local-type');
+    const localId = currentContainer.getAttribute('data-local-id');
+    const localNom = currentContainer.getAttribute('data-local-nom');
+    
+    const startTime = `${selectedDate}T${String(startHour).padStart(2, '0')}:${String(startMinutes).padStart(2, '0')}`;
+    const endTime = `${selectedDate}T${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+    
+    console.log('Modal data:', {localType, localId, localNom, startTime, endTime});
+    
+    // Pré-remplir les champs cachés
+    if (localType === 'bureau') {
+        document.getElementById('formType').value = '1';
+        document.getElementById('formBureau').value = localId;
+        document.getElementById('formPiece').value = '';
+    } else {
+        document.getElementById('formType').value = '0';
+        document.getElementById('formPiece').value = localId;
+        document.getElementById('formBureau').value = '';
+    }
+    
+    console.log('Hidden fields:', {
+        type: document.getElementById('formType').value,
+        bureau: document.getElementById('formBureau').value,
+        piece: document.getElementById('formPiece').value
+    });
+    
+    var modal = new bootstrap.Modal(document.getElementById('reservationModal'));
+    document.getElementById('reservationDetails').innerHTML = `<p>Créer une réservation pour <strong>${localNom}</strong><br><small class="text-muted">${startHour}h${String(startMinutes).padStart(2, '0')} - ${endHour}h${String(endMinutes).padStart(2, '0')}</small></p>`;
+    document.getElementById('formNom').value = '';
+    document.getElementById('formDebut').value = startTime;
+    document.getElementById('formFin').value = endTime;
+    
+    document.getElementById('deleteBtn').style.display = 'none';
+    document.getElementById('saveBtn').setAttribute('data-current-id', '');
+    
+    // Réinitialiser les options de récurrence
+    document.getElementById('formRecurrence').checked = false;
+    document.getElementById('recurrenceOptions').style.display = 'none';
+    
+    // Afficher/masquer les options de récurrence
+    document.getElementById('formRecurrence').addEventListener('change', function(){
+        document.getElementById('recurrenceOptions').style.display = this.checked ? 'block' : 'none';
+    });
+    
+    modal.show();
+}
+
+function openEditReservationModal(reservationId) {
+    // Récupérer les détails de la réservation
+    fetch('/reservations/api/reservations/' + reservationId + '/')
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Erreur:', data.error);
+                return;
+            }
+            
+            // Vérifier si l'utilisateur peut éditer cette réservation
+            if (!data.can_edit) {
+                return; // Silencieux - ne rien faire si pas éditable
+            }
+            
+            // Pré-remplir le formulaire
+            document.getElementById('formNom').value = data.nom || '';
+            document.getElementById('formDebut').value = data.debut.slice(0, 16);
+            document.getElementById('formFin').value = data.fin.slice(0, 16);
+            document.getElementById('formType').value = data.type;
+            
+            if (data.type === 1) {
+                document.getElementById('formBureau').value = data.bureau_id || '';
+                document.getElementById('formPiece').value = '';
+            } else {
+                document.getElementById('formPiece').value = data.piece_id || '';
+                document.getElementById('formBureau').value = '';
+            }
+            
+            // Afficher les détails
+            let locationName = data.bureau_nom || data.piece_nom || 'Local';
+            document.getElementById('reservationDetails').innerHTML = `
+                <p><strong>Modifier la réservation</strong><br>
+                <small class="text-muted">${locationName}</small></p>
+            `;
+            
+            // Désactiver les options de récurrence en mode édition
+            document.getElementById('formRecurrence').checked = false;
+            document.getElementById('recurrenceOptions').style.display = 'none';
+            document.getElementById('formRecurrence').disabled = true;
+            
+            // Afficher le bouton supprimer
+            document.getElementById('deleteBtn').style.display = 'inline-block';
+            document.getElementById('saveBtn').setAttribute('data-current-id', reservationId);
+            
+            // Ouvrir le modal
+            var modal = new bootstrap.Modal(document.getElementById('reservationModal'));
+            modal.show();
+        })
+        .catch(err => {
+            console.error('Erreur:', err);
+        });
+}
+
+
+function saveReservation(eventId) {
+    // Récupérer l'ID depuis l'attribut data-current-id si pas passé en paramètre
+    if (!eventId) {
+        eventId = document.getElementById('saveBtn').getAttribute('data-current-id');
+    }
+    
+    var nom = document.getElementById('formNom').value || 'Réservation';
+    var debut = document.getElementById('formDebut').value;
+    var fin = document.getElementById('formFin').value;
+    var type = document.getElementById('formType').value;
+    var bureauValue = document.getElementById('formBureau').value;
+    var pieceValue = document.getElementById('formPiece').value;
+    
+    // Convertir les chaînes vides en null et s'assurer que les valeurs numériques sont bien des nombres
+    var bureau = bureauValue && bureauValue !== '' ? parseInt(bureauValue) : null;
+    var piece = pieceValue && pieceValue !== '' ? parseInt(pieceValue) : null;
+    
+    console.log('Save reservation:', {nom, debut, fin, type, bureau, piece, bureauValue, pieceValue});
+    
+    if (!debut || !fin) {
+        alert('Veuillez remplir les dates');
+        return;
+    }
+    
+    if (!type || type === '') {
+        alert('Erreur: type de réservation manquant');
+        return;
+    }
+    
+    if (!bureau && !piece) {
+        alert('Erreur: aucun local sélectionné');
+        return;
+    }
+    
+    var data = {
+        nom: nom,
+        type: type,
+        debut: debut,
+        fin: fin,
+        bureau_id: bureau,
+        piece_id: piece
+    };
+    
+    // Ajouter les paramètres de récurrence si la case est cochée (uniquement pour les nouvelles réservations)
+    if (!eventId && document.getElementById('formRecurrence').checked && !document.getElementById('formRecurrence').disabled) {
+        data.recurrence = 'true';
+        data.frequence = document.getElementById('formFrequence').value;
+        data.repetitions = document.getElementById('formRepetitions').value;
+    }
+    
+    console.log('Data to send:', data);
+    
+    var url = eventId ? '/reservations/api/reservations/' + eventId + '/' : '/reservations/api/reservations/create/';
+    var method = eventId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(response => {
+        if (response.error) {
+            console.error('Erreur:', response.error);
+        }
+        // Recharger directement sans alert
+        location.reload();
+    })
+    .catch(err => {
+        console.error('Erreur:', err);
+        location.reload();
+    });
+}
+
+function deleteReservation() {
+    var eventId = document.getElementById('saveBtn').getAttribute('data-current-id');
+    if (!eventId) return;
+    
+    fetch('/reservations/api/reservations/' + eventId + '/', {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(r => r.json())
+    .then(() => {
+        // Recharger directement sans alert
+        location.reload();
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Erreur lors de la suppression');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+{% endblock %}
