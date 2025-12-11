@@ -17,12 +17,19 @@ ManageILIA est une application web développée avec Django pour la gestion du s
 #### Installation en local :
 
 1. Cloner le dépot : `git clone https://github.com/CCL04/Projet_GestionILIA.git`
-2. Créer un environnement virtuel : `venv\Scripts\activate`
+2. Créer un environnement virtuel : `venv\Scripts\activate`  (windows)
 3. Installer les dépendances : `pip install -r requirements.txt` 
 4. Configurer les variables d'environnement : `Placer le fichier .env dans ./ManageILIA`
 5. Lancer les migrations et créer un admin : `python manage.py migrate` & `python manage.py createsuperuser`
 6. Récupérer les fichiers statiques : `python manage.py collectstatic`
 7. Lancer le serveur : `python manage.py runserver`
+
+**Remarque :**
+Le .env contient : 
+* La secret Key
+* La valeur de Debug
+* Le nom, le mot de passe, l'utilisateur, le host et le port de la base de donnée
+* Les Host acceptés pour une mise en ligne locale.
 
 
 ### Structure du projet :
@@ -38,6 +45,7 @@ Projet_GestionILIA/
 │   ├── projects/        # Gestion des projets 
 │   ├── reservations/    # Gestion des bureaux 
 │   ├── templates/       # Fichiers HTML génériques
+│   ├── timetables/      # Horaire personnel
 │   ├── staticfiles/     # CSS, JS, Images
 │   ├── .env             # Variables d'environnement
 │   ├── ssl.pem          # clé pour utilisation locale
